@@ -1,57 +1,64 @@
-import express, { Express, Request, Response } from "express";
-import * as http from "http";
-import { Schema, model, connect } from "mongoose";
+import express, {
+  Express,
+  Request,
+  Response,
+  ErrorRequestHandler,
+} from "express";
+import { connect as mongooseConnect } from "mongoose";
 
-connect(String(process.env.DB_URL));
-class App {
-  public app: express.Application;
-  public httpServer: http.Server;
-  public port: number;
+import bodyParser from "body-parser";
 
-  constructor() {
-    //dotenv.config();
-    this.app = express();
-    this.port = Number(process.env.PORT || 8080);
-    this.httpServer = http.createServer(this.app);
+import HttpError from "./Model/util/httpError";
 
-    this.initializeControllers();
+import routerRecette from "./Routes/recetteRoutes";
 
-    // this.app.use(
-    //   process.env.APPLICATION_ROOT + '/api-docs',
-    //   swaggerUi.serve,
-    //   swaggerUi.setup(openapiSpecification)
-    // )
-  }
+const app: Express = express();
 
-  private initializeControllers(): void {}
+//Parse the Request... Cool for manipulating Buffer
+app.use(bodyParser.json());
 
-  public listen(): void {
-    this.app.listen(this.port, () => {
-      console.log(`App listening on the port ${this.port}`);
-    });
-  }
-}
-
-export default App;
-
-interface IUser {
-  dimou: String;
-}
-
-// 2. Create a Schema corresponding to the document interface.
-
-const app = new App();
-const userSchema = new Schema<IUser>({
-  dimou: { type: String, required: true },
+//Allow Access And Request Type from Anywhere
+app.use((req: Request, res: Response, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE"
+  );
+  next();
 });
 
-// 3. Create a Model.
-const User = model<IUser>("User", userSchema);
-app.app.get("/", (req: Request, res: Response) => {
-  User.find({}, (err, users) => {
-    console.log(users);
-    return res.send(`Hello World!${users}`);
+//Defines Routes
+app.use("/api/recette", routerRecette);
+
+//Créer une erreur si la requete n'est pas traitée
+app.use((req, res, next) => {
+  const error = new HttpError("Could note find this route", 404);
+  throw error;
+});
+
+// Gérer les erreur
+const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
+  if (req.method === "OPTIONS") {
+    console.log("A preflight request has been sent");
+    return res.status(200).end();
+  }
+  console.log(error.message);
+  res.status(error.code || 500);
+  res.json({ message: error.message || "An unknow error appears" });
+};
+app.use(errorHandler);
+
+mongooseConnect(
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@recettes.mwcji.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
+)
+  .then(() => {
+    console.log("conneted");
+    app.listen(process.env.PORT || 5001);
+  })
+  .catch((err) => {
+    console.log(err);
   });
-});
-app.listen();
-//dotenv.config();
