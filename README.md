@@ -14,13 +14,13 @@ Pour avoir accès à vos variable d'environnement en mode dev, vous devez créer
 }
 ```
 
-##Important
+## Important
 
 
 Il faut importer les biblioteques que vous utilisez avec npm, pour éviter les conflits avec yarn
 
 
 
-##Todo 
+## Todo 
 
 TODO --> rename les fichier js en ts
