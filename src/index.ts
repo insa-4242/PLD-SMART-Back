@@ -1,8 +1,7 @@
-import express, { Express, Request, Response } from 'express';
-import dotenv from 'dotenv';
-import * as http from 'http';
-import { Schema, model, connect } from 'mongoose';
-dotenv.config();
+import express, { Express, Request, Response } from "express";
+import * as http from "http";
+import { Schema, model, connect } from "mongoose";
+
 connect(String(process.env.DB_URL));
 class App {
   public app: express.Application;
@@ -10,9 +9,9 @@ class App {
   public port: number;
 
   constructor() {
-    dotenv.config();
+    //dotenv.config();
     this.app = express();
-    this.port = Number(process.env.PORT);
+    this.port = Number(process.env.PORT || 8080);
     this.httpServer = http.createServer(this.app);
 
     this.initializeControllers();
@@ -47,12 +46,12 @@ const userSchema = new Schema<IUser>({
 });
 
 // 3. Create a Model.
-const User = model<IUser>('User', userSchema);
-app.app.get('/', (req: Request, res: Response) => {
+const User = model<IUser>("User", userSchema);
+app.app.get("/", (req: Request, res: Response) => {
   User.find({}, (err, users) => {
     console.log(users);
     return res.send(`Hello World!${users}`);
   });
 });
 app.listen();
-dotenv.config();
+//dotenv.config();
