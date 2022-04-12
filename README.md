@@ -7,7 +7,9 @@ Pour avoir accès à vos variable d'environnement en mode dev, vous devez créer
 ```json
 {
   "env": {
-    "DB_URL": "VOTREURLSECRET"
+    "DB_USER": "TOCHANGE",
+    "DB_PASSWORD": "TOCHANGE",
+    "DB_NAME": "Recettes"
   }
 }
 ```
