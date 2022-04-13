@@ -6,13 +6,10 @@ const recetteModel = new Schema({
   imageUrls: [{ type: String }],
   category: { type: String },
   title: { type: String, required: true },
-  subtitle: { type: String },
-
-  prepTime: { type: String },
-  cookTime: { type: String },
-
-  duration: { type: Number, min: 0, required: true },
-
+  datePublished: { type: Date, required: true },
+  prepTime: { type: Number },
+  cookTime: { type: Number },
+  totalTime: { type: Number },
   difficulty: {
     type: String, //easy medium hard --> difficulty object
     enum: ["facile", "moyen", "difficile"],
@@ -23,7 +20,14 @@ const recetteModel = new Schema({
   isGlutenFree: { type: Boolean, required: true },
   instructions: [
     {
-      type: String,
+      "@type": {
+        type: String,
+        required: true,
+      },
+      text: {
+        type: String,
+        required: true,
+      },
     },
   ],
   ingredients: [
@@ -34,6 +38,17 @@ const recetteModel = new Schema({
     },
   ],
   utensiles: [{ idUtensile: Schema.Types.ObjectId }],
+  author: { type: String, required: true },
+  description: [{ type: String, required: true }],
+  keywords: [{ type: String, required: true }],
+  type: { type: String },
+  note: {
+    "@type": { type: String, required: true },
+    reviewCount: { type: Number, required: true },
+    ratingValue: { type: Number, required: true },
+    worstRating: { type: Number, required: true },
+    bestRating: { type: Number, required: true },
+  },
 });
 
 module.exports = model("Recette", recetteModel);

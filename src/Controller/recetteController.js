@@ -1,4 +1,7 @@
+const Mongoose = require("mongoose");
+
 import recetteModel from "../Model/recetteModel";
+import ingredientModel from "../Model/ingredientModel";
 
 import HttpError from "../Model/util/httpError";
 
@@ -58,29 +61,82 @@ const addRec = async (req, res, next) => {
   //Todo remplace "TEST" byInput
 
   console.log(req.body);
-  /*  const newRecette = new recetteModel({
-    marmitonID: "test",
-    imageUrl: "testurl",
-    title: "testtile",
-    subtitle: "",
-    duration: 14,
+  let newIngredients = [];
+  let ingredientsfinalArray = [];
+  for (let index = 0; index < req.body.ingredients.length; index++) {
+    const ingredient = req.body.ingredients[index];
+    let existingIngredient;
+    try {
+      existingIngredient = await ingredientModel.findOne({
+        name: ingredient.name,
+      });
+      if (!existingIngredient) {
+        const newIngredient = new ingredientModel({
+          name: ingredient.name,
+          imageUrl: ingredient.imageUrl,
+        });
+        newIngredients.push(newIngredient);
+        ingredientsfinalArray.push({
+          idIngredient: newIngredient._id,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+        });
+      } else {
+        ingredientsfinalArray.push({
+          idIngredient: existingIngredient._id,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      const error = new HttpError("Ooops An error Occured", 500);
+      return next(error);
+    }
+  }
+
+  const newRecette = new recetteModel({
+    marmitonUrl: req.body.url,
+    imageUrl: req.body.images,
+    title: req.body.name,
+    category: req.body.recipeCategory,
+    datePublished: req.body.datePublished,
+    prepTime: req.body.prepTime,
+    cookTime: req.body.cookTime,
+    totalTime: req.body.totalTime,
+    //TODO ADD DFFICULTY
     difficulty: "facile",
-    isVegetarian: true,
+    isVegetarian: false,
     isVegan: false,
     isLactoseFree: false,
     isGlutenFree: false,
-    instructions: ["first", "second"],
-    ingredients: [],
+    instructions: req.body.instructions,
+    author: req.body.author,
+    cookTime: req.body.cookTime,
+    totalTime: req.body.totalTime,
+    //TODO ING
+    ingredients: ingredientsfinalArray,
     utensiles: [],
+    author: req.body.author,
+    description: req.body.description,
+    keywords: req.body.keywords,
+    type: req.body.type,
+    note: req.body.note,
   });
 
   try {
-    await newRecette.save();
+    const sess = await Mongoose.startSession();
+    sess.startTransaction();
+    for (let index = 0; index < newIngredients.length; index++) {
+      await newIngredients[index].save({ session: sess });
+    }
+    await newRecette.save({ session: sess });
+    await sess.commitTransaction();
   } catch (err) {
-    console.log(err);
+    console.log("runTransactionWithRetry error: ");
     const error = new HttpError("Error saving Catégorie", 500);
     return next(error);
-  } */
+  }
   res.status(201).json({
     status: "ok",
   });
