@@ -11,7 +11,7 @@ import bodyParser from "body-parser";
 import HttpError from "./Model/util/httpError";
 
 import routerRecette from "./Routes/recetteRoutes";
-
+import routerIngredient from "./Routes/ingredientRoutes";
 const app: Express = express();
 
 //Parse the Request... Cool for manipulating Buffer
@@ -33,6 +33,7 @@ app.use((req: Request, res: Response, next) => {
 
 //Defines Routes
 app.use("/api/recette", routerRecette);
+app.use("/api/ingredient", routerIngredient);
 
 //Créer une erreur si la requete n'est pas traitée
 app.use((req, res, next) => {

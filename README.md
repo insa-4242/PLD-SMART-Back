@@ -45,13 +45,13 @@ Pour avoir accès à vos variable d'environnement en mode dev, vous devez créer
     "title":string required,
     "subtitle": string optionnal,
     "duration":int(en minute) required,
-    "difficulty":["facile","moyen","difficile"]required,
+    "difficulty":["facile","moyen","difficile"]required, *pas en ^1.0
     "isVegetarian":boolean required,
     "isVegan":boolean required,
     "isLactoseFree": boolean required,
     "isGlutenFree":boolean required,
     "instructions":["Strings"] required,
     "ingredients":[{idIngredient,quantity,unit}]required, *change de idIngredient à lable:string pour ne devoir pas faire le lien entre eux
-    "utensiles":[idUtensile]optionnal,
+    "utensiles":[idUtensile]optionnal, *pas en version ^1.0
 }
 ```

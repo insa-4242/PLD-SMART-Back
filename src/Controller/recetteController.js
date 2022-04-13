@@ -38,7 +38,7 @@ const postRecette = async (req, res, next) => {
     isGlutenFree: false,
     instructions: ["first", "second"],
     ingredients: [],
-    utensiles: []
+    utensiles: [],
   });
 
   try {
