@@ -52,6 +52,10 @@ const errorHandler: ErrorRequestHandler = (error, req, res, next) => {
 };
 app.use(errorHandler);
 
+console.log(
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@recettes.mwcji.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
+);
+
 mongooseConnect(
   `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@recettes.mwcji.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
 )
