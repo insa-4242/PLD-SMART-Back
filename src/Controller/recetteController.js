@@ -38,7 +38,7 @@ const postRecette = async (req, res, next) => {
     isGlutenFree: false,
     instructions: ["first", "second"],
     ingredients: [],
-    utensiles: []
+    utensiles: [],
   });
 
   try {
@@ -53,5 +53,39 @@ const postRecette = async (req, res, next) => {
   });
 };
 
+const addRec = async (req, res, next) => {
+  //TODO --> Vérify INput Error --> Check moogoose validators
+  //Todo remplace "TEST" byInput
+
+  console.log(req.body);
+  /*  const newRecette = new recetteModel({
+    marmitonID: "test",
+    imageUrl: "testurl",
+    title: "testtile",
+    subtitle: "",
+    duration: 14,
+    difficulty: "facile",
+    isVegetarian: true,
+    isVegan: false,
+    isLactoseFree: false,
+    isGlutenFree: false,
+    instructions: ["first", "second"],
+    ingredients: [],
+    utensiles: [],
+  });
+
+  try {
+    await newRecette.save();
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError("Error saving Catégorie", 500);
+    return next(error);
+  } */
+  res.status(201).json({
+    status: "ok",
+  });
+};
+
 exports.getRecette = getRecette;
 exports.postRecette = postRecette;
+exports.addRec = addRec;
