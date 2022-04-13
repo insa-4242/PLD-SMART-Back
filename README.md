@@ -40,27 +40,18 @@ Pour avoir accès à vos variable d'environnement en mode dev, vous devez créer
 
 ```
 {
+    "marmitonID":string required, unique
+    "imageUrl":string required,
+    "title":string required,
+    "subtitle": string optionnal,
+    "duration":int(en minute) required,
+    "difficulty":["facile","moyen","difficile"]required,
     "isVegetarian":boolean required,
     "isVegan":boolean required,
     "isLactoseFree": boolean required,
     "isGlutenFree":boolean required,
-    "duration":int(en minute) required,
-    "imageUrl":string required,
-    "title":string required,
-    "subtitble": string optionnal,
     "instructions":["Strings"] required,
-    "difficulty":["easy","medium","hard"]required,
-    "ingredient":[{idIngredient,quantité,unit}]required,
-    "ustensiles":[idUstendile]optionnal,
+    "ingredients":[{idIngredient,quantity,unit}]required, *change de idIngredient à lable:string pour ne devoir pas faire le lien entre eux
+    "utensiles":[idUtensile]optionnal,
 }
-{
-    "label": String required,
-    "imgUrl":String optionnal,
-}
-
-{
-    "label":String label,
-    "imgUrl":imgUrl,
-}
-
 ```

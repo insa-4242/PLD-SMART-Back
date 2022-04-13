@@ -26,7 +26,19 @@ const postRecette = async (req, res, next) => {
   //TODO --> Vérify INput Error --> Check moogoose validators
   //Todo remplace "TEST" byInput
   const newRecette = new recetteModel({
-    instruction: "TEST",
+    marmitonID: "test",
+    imageUrl: "testurl",
+    title: "testtile",
+    subtitle: "",
+    duration: 14,
+    difficulty: "facile",
+    isVegetarian: true,
+    isVegan: false,
+    isLactoseFree: false,
+    isGlutenFree: false,
+    instructions: ["first", "second"],
+    ingredients: [],
+    utensiles: []
   });
 
   try {
