@@ -93,9 +93,11 @@ const addRec = async (req, res, next) => {
     }
   }
 
+  console.log(req.body.images);
+
   const newRecette = new recetteModel({
     marmitonUrl: req.body.url,
-    imageUrl: req.body.images,
+    imageUrls: req.body.images,
     title: req.body.name,
     category: req.body.recipeCategory,
     datePublished: req.body.datePublished,
@@ -107,7 +109,7 @@ const addRec = async (req, res, next) => {
     isVegan: false,
     isLactoseFree: false,
     isGlutenFree: false,
-    instructions: req.body.instructions,
+    instructions: req.body.step,
     author: req.body.author,
     cookTime: req.body.cookTime,
     totalTime: req.body.totalTime,
@@ -119,6 +121,7 @@ const addRec = async (req, res, next) => {
     type: req.body.type,
     note: req.body.note,
   });
+  console.log(newRecette);
 
   try {
     const sess = await Mongoose.startSession();

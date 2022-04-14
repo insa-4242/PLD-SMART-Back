@@ -1,4 +1,5 @@
 const Mongoose = require("mongoose");
+const { validationResult } = require("express-validator");
 
 import recetteModel from "../Model/recetteModel";
 
@@ -28,4 +29,43 @@ const getRecettebyId = async (req, res, next) => {
   });
 };
 
+const searchByName = async (req, res, next) => {
+  //Verify UserInput
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    return next(new HttpError("Error input", 422));
+  }
+
+  let products = [];
+  try {
+    products = await recetteModel
+      .find(
+        {
+          $text: { $search: req.query.keyword },
+        },
+        { score: { $meta: "textScore" } }
+      )
+      .select("_id, title, ingredients")
+      .populate({
+        path: "ingredients",
+        populate: {
+          path: "idIngredient",
+        },
+      })
+      .sort({ score: { $meta: "textScore" } });
+    console.log(products);
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("Error Server", 500));
+  }
+
+  console.log(req.query);
+  res.status(201).json({
+    recette: products.map((prod) => prod.toObject({ getters: true })),
+  });
+};
+
 exports.getRecettebyId = getRecettebyId;
+exports.getRecettebyId = searchByName;

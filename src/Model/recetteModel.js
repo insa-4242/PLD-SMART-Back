@@ -32,7 +32,7 @@ const recetteModel = new Schema({
   ],
   ingredients: [
     {
-      idIngredient: { type: Schema.Types.ObjectId },
+      idIngredient: { type: Schema.Types.ObjectId, ref: "Ingredient" },
       quantity: { type: Number },
       unit: { type: String }, //unit as a string or define object?
     },
