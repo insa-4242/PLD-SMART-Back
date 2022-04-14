@@ -40,20 +40,52 @@ const searchByName = async (req, res, next) => {
 
   if (!errors.isEmpty()) {
     console.log(errors);
-    return next(new HttpError("Error input", 422));
+    let msg = "";
+    errors.array().forEach((element) => {
+      msg += JSON.stringify(element);
+    });
+    return next(new HttpError(msg, 422));
   }
 
+  const filter = req.query.correctFilter;
+  console.log(filter);
   let products = [];
   try {
     products = await recetteModel
       .find(
         {
           $text: { $search: req.query.keyword },
+          ...(filter &&
+            filter.type &&
+            filter.type.length !== 0 && {
+              type: { $in: filter.type },
+            }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.length !== 0 && {
+              difficulty: { $in: filter.difficulty },
+            }),
+          ...(filter &&
+            filter.isVegetarian && {
+              isVegetarian: true,
+            }),
+          ...(filter &&
+            filter.isVegan && {
+              isVegan: true,
+            }),
+          ...(filter &&
+            filter.isLactoseFree && {
+              isLactoseFree: true,
+            }),
+          ...(filter &&
+            filter.isGlutenFree && {
+              isGlutenFree: true,
+            }),
         },
         { score: { $meta: "textScore" } }
       )
       .select(
-        "_id, title , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree, imageUrls"
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls"
       )
       .sort({ score: { $meta: "textScore" } });
 
@@ -176,6 +208,57 @@ const autocompleteNameRecette = async (req, res, next) => {
     recettes: recettes.map((prod) => prod.toObject({ getters: true })),
   });
 };
+
+/**
+ *  Function that build the good arrays needed in Mongo Query
+ *
+ * @param {*} filter The filter in Http Req
+ * @returns {*} The good Query Array Filter stock in JS-Object
+ */
+const filterQueryBuilder = (filter) => {
+  let filterqueryCat = [];
+  filter &&
+    filter.type &&
+    filter.type.forEach((element) => {
+      filterqueryCat.push({ categorie: element });
+    });
+
+  let filterquerySubCat1 = [];
+  filter &&
+    filter.subCategories1Id &&
+    filter.subCategories1Id.forEach((element) => {
+      filterquerySubCat1.push({ sub_categorie_1: element });
+    });
+
+  let filterquerySubCat2 = [];
+  filter &&
+    filter.subCategories2Id &&
+    filter.subCategories2Id.forEach((element) => {
+      filterquerySubCat2.push({ sub_categorie_2: element });
+    });
+
+  let filterquerySubCat3 = [];
+  filter &&
+    filter.subCategories3Id &&
+    filter.subCategories3Id.forEach((element) => {
+      filterquerySubCat3.push({ sub_categorie_3: element });
+    });
+  let filterqueryBrand = [];
+  filter &&
+    filter.brandId &&
+    filter.brandId.forEach((element) => {
+      filterqueryBrand.push({ brand: element });
+    });
+
+  return {
+    filterqueryCat,
+    filterquerySubCat1,
+    filterquerySubCat2,
+    filterquerySubCat3,
+    filterqueryBrand,
+  };
+};
+
 exports.getRecettebyId = getRecettebyId;
 exports.searchByName = searchByName;
 exports.autocompleteIngr = autocompleteIngr;
