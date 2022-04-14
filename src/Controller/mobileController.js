@@ -55,13 +55,49 @@ const searchByName = async (req, res, next) => {
         },
       })
       .sort({ score: { $meta: "textScore" } });
+
     console.log(products);
   } catch (err) {
     console.log(err);
     return next(new HttpError("Error Server", 500));
   }
+  res.status(201).json({
+    recette: products.map((prod) => prod.toObject({ getters: true })),
+  });
+};
 
-  console.log(req.query);
+const searchByIngr = async (req, res, next) => {
+  //Verify UserInput
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    return next(new HttpError("Error input", 422));
+  }
+
+  let products = [];
+  try {
+    products = await recetteModel
+      .find(
+        {
+          $text: { $search: req.query.keyword },
+        },
+        { score: { $meta: "textScore" } }
+      )
+      .select("_id, title, ingredients")
+      .populate({
+        path: "ingredients",
+        populate: {
+          path: "idIngredient",
+        },
+      })
+      .sort({ score: { $meta: "textScore" } });
+
+    console.log(products);
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("Error Server", 500));
+  }
   res.status(201).json({
     recette: products.map((prod) => prod.toObject({ getters: true })),
   });
@@ -69,3 +105,4 @@ const searchByName = async (req, res, next) => {
 
 exports.getRecettebyId = getRecettebyId;
 exports.getRecettebyId = searchByName;
+exports.getRecettebyId = searchByIngr;
