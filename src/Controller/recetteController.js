@@ -58,9 +58,7 @@ const postRecette = async (req, res, next) => {
 
 const addRec = async (req, res, next) => {
   //TODO --> Vérify INput Error --> Check moogoose validators
-  //Todo remplace "TEST" byInput
 
-  console.log(req.body);
   let newIngredients = [];
   let ingredientsfinalArray = [];
   for (let index = 0; index < req.body.ingredients.length; index++) {
@@ -104,7 +102,6 @@ const addRec = async (req, res, next) => {
     prepTime: req.body.prepTime,
     cookTime: req.body.cookTime,
     totalTime: req.body.totalTime,
-    //TODO ADD DFFICULTY
     difficulty: "facile",
     isVegetarian: false,
     isVegan: false,
@@ -114,7 +111,6 @@ const addRec = async (req, res, next) => {
     author: req.body.author,
     cookTime: req.body.cookTime,
     totalTime: req.body.totalTime,
-    //TODO ING
     ingredients: ingredientsfinalArray,
     utensiles: [],
     author: req.body.author,

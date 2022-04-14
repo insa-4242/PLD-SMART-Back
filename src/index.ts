@@ -11,6 +11,7 @@ import bodyParser from "body-parser";
 import HttpError from "./Model/util/httpError";
 
 import routerRecette from "./Routes/recetteRoutes";
+import routerMobile from "./Routes/mobileRoutes";
 
 const app: Express = express();
 
@@ -33,6 +34,7 @@ app.use((req: Request, res: Response, next) => {
 
 //Defines Routes
 app.use("/api/recette", routerRecette);
+app.use("/api/mobile", routerMobile);
 
 //Créer une erreur si la requete n'est pas traitée
 app.use((req, res, next) => {
