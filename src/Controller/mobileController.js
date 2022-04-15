@@ -48,7 +48,6 @@ const searchByName = async (req, res, next) => {
   }
 
   const filter = req.query.correctFilter;
-  console.log(filter);
   let products = [];
   try {
     products = await recetteModel
@@ -81,14 +80,103 @@ const searchByName = async (req, res, next) => {
             filter.isGlutenFree && {
               isGlutenFree: true,
             }),
+          ...(filter &&
+            filter.duration &&
+            filter.duration.min &&
+            !filter.duration.max && {
+              totalTime: { $gte: filter.duration.min },
+            }),
+          ...(filter &&
+            filter.duration &&
+            filter.duration.max &&
+            !filter.duration.min && {
+              totalTime: { $gte: filter.duration.min },
+            }),
+          ...(filter &&
+            filter.duration &&
+            filter.duration.max &&
+            filter.duration.min && {
+              totalTime: {
+                $lte: filter.duration.max,
+                $gte: filter.duration.min,
+              },
+            }),
         },
         { score: { $meta: "textScore" } }
       )
       .select(
-        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls"
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls , totalTime "
       )
       .sort({ score: { $meta: "textScore" } });
 
+    let ids = [];
+    products.forEach((element) => {
+      ids.push(element._id);
+    });
+    let productsplus = [];
+
+    try {
+      let regex = `${req.query.keyword}`;
+      productsplus = await recetteModel
+        .find({
+          title: { $regex: regex, $options: "i" },
+          ...(filter &&
+            filter.type &&
+            filter.type.length !== 0 && {
+              type: { $in: filter.type },
+            }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.length !== 0 && {
+              difficulty: { $in: filter.difficulty },
+            }),
+          ...(filter &&
+            filter.isVegetarian && {
+              isVegetarian: true,
+            }),
+          ...(filter &&
+            filter.isVegan && {
+              isVegan: true,
+            }),
+          ...(filter &&
+            filter.isLactoseFree && {
+              isLactoseFree: true,
+            }),
+          ...(filter &&
+            filter.isGlutenFree && {
+              isGlutenFree: true,
+            }),
+          ...(filter &&
+            filter.duration &&
+            filter.duration.min &&
+            !filter.duration.max && {
+              totalTime: { $gte: filter.duration.min },
+            }),
+          ...(filter &&
+            filter.duration &&
+            filter.duration.max &&
+            !filter.duration.min && {
+              totalTime: { $gte: filter.duration.min },
+            }),
+          ...(filter &&
+            filter.duration &&
+            filter.duration.max &&
+            filter.duration.min && {
+              totalTime: {
+                $lte: filter.duration.max,
+                $gte: filter.duration.min,
+              },
+            }),
+          _id: { $nin: ids },
+        })
+        .select(
+          "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls , totalTime "
+        );
+    } catch (err) {
+      console.log(err);
+      return next(new HttpError("Error Server", 500));
+    }
+    products.push(...productsplus);
     products.forEach((product) => {
       if (product.imageUrls.length === 0) {
         product.imageUrls.push(
@@ -102,6 +190,22 @@ const searchByName = async (req, res, next) => {
   }
   res.status(201).json({
     recette: products.map((prod) => prod.toObject({ getters: true })),
+  });
+};
+
+const searchByIngrId = async (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    let msg = "";
+    errors.array().forEach((element) => {
+      msg += JSON.stringify(element);
+    });
+    return next(new HttpError(msg, 422));
+  }
+  res.status(201).json({
+    recette: "products.map((prod) => prod.toObject({ getters: true }))",
   });
 };
 
@@ -209,56 +313,7 @@ const autocompleteNameRecette = async (req, res, next) => {
   });
 };
 
-/**
- *  Function that build the good arrays needed in Mongo Query
- *
- * @param {*} filter The filter in Http Req
- * @returns {*} The good Query Array Filter stock in JS-Object
- */
-const filterQueryBuilder = (filter) => {
-  let filterqueryCat = [];
-  filter &&
-    filter.type &&
-    filter.type.forEach((element) => {
-      filterqueryCat.push({ categorie: element });
-    });
-
-  let filterquerySubCat1 = [];
-  filter &&
-    filter.subCategories1Id &&
-    filter.subCategories1Id.forEach((element) => {
-      filterquerySubCat1.push({ sub_categorie_1: element });
-    });
-
-  let filterquerySubCat2 = [];
-  filter &&
-    filter.subCategories2Id &&
-    filter.subCategories2Id.forEach((element) => {
-      filterquerySubCat2.push({ sub_categorie_2: element });
-    });
-
-  let filterquerySubCat3 = [];
-  filter &&
-    filter.subCategories3Id &&
-    filter.subCategories3Id.forEach((element) => {
-      filterquerySubCat3.push({ sub_categorie_3: element });
-    });
-  let filterqueryBrand = [];
-  filter &&
-    filter.brandId &&
-    filter.brandId.forEach((element) => {
-      filterqueryBrand.push({ brand: element });
-    });
-
-  return {
-    filterqueryCat,
-    filterquerySubCat1,
-    filterquerySubCat2,
-    filterquerySubCat3,
-    filterqueryBrand,
-  };
-};
-
+exports.searchByIngrId = searchByIngrId;
 exports.getRecettebyId = getRecettebyId;
 exports.searchByName = searchByName;
 exports.autocompleteIngr = autocompleteIngr;
