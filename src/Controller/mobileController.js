@@ -196,14 +196,32 @@ const searchByName = async (req, res, next) => {
 const searchByIngrId = async (req, res, next) => {
   const errors = validationResult(req);
 
-  if (!errors.isEmpty()) {
+  /*  if (!errors.isEmpty()) {
     console.log(errors);
     let msg = "";
     errors.array().forEach((element) => {
       msg += JSON.stringify(element);
     });
     return next(new HttpError(msg, 422));
-  }
+  } */
+  /**input: array of ingredient IDs stocked in req.query.ingredIDs
+    [id1,id2,id3]
+    outut: array of recepies which contain at least one of these ingredients
+    useful: the Schema ingredientModel holds now a Array of Recepies
+
+    CODE:
+    allerecepiesID = []
+    ingredArray.forEach(value) =>{
+      value.idsRecette.forEach(recetteID) => {
+        allrecepiesID.push(recetteID)
+      }
+    }
+    allerecepiesID.deleteDoubles;
+    RecetteModel.find(id in allerecepiesID)
+  **/
+
+  console.log(req.params.ingredIDs);
+  const demiIngredient1 = new ingredientModel({});
   res.status(201).json({
     recette: "products.map((prod) => prod.toObject({ getters: true }))",
   });
@@ -229,7 +247,6 @@ const autocompleteIngr = async (req, res, next) => {
       )
       .select("name")
       .sort({ score: { $meta: "textScore" } });
-    console.log(ingredients);
   } catch (err) {
     console.log(err);
     return next(new HttpError("Error Server", 500));
