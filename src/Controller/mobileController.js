@@ -174,7 +174,9 @@ const searchByName = async (req, res, next) => {
             }),
           _id: { $nin: ids },
         })
-        .select("name");
+        .select(
+          "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls , totalTime "
+        );
     } catch (err) {
       console.log(err);
       return next(new HttpError("Error Server", 500));
@@ -187,6 +189,22 @@ const searchByName = async (req, res, next) => {
   }
   res.status(201).json({
     recette: products.map((prod) => prod.toObject({ getters: true })),
+  });
+};
+
+const searchByIngrId = async (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    let msg = "";
+    errors.array().forEach((element) => {
+      msg += JSON.stringify(element);
+    });
+    return next(new HttpError(msg, 422));
+  }
+  res.status(201).json({
+    recette: "products.map((prod) => prod.toObject({ getters: true }))",
   });
 };
 
@@ -294,6 +312,7 @@ const autocompleteNameRecette = async (req, res, next) => {
   });
 };
 
+exports.searchByIngrId = searchByIngrId;
 exports.getRecettebyId = getRecettebyId;
 exports.searchByName = searchByName;
 exports.autocompleteIngr = autocompleteIngr;
