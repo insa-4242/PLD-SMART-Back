@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const ingredientModel = new Schema({
+const utensilModel = new Schema({
   name: { type: String, required: true },
   marmitonId: { type: String, unique: true },
   imgUrl: { type: String },
@@ -12,4 +12,4 @@ const ingredientModel = new Schema({
   ],
 });
 
-module.exports = model("Ingredient", ingredientModel);
+module.exports = model("Utensil", utensilModel);

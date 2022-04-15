@@ -2,53 +2,66 @@ import { Schema, model } from "mongoose";
 
 const recetteModel = new Schema({
   //on a besoin d'une objectID pour chaque entité ou est-ce que c'est crée automatiquement? :non, Cest à mongoose de la créer
-  marmitonUrl: { type: String, required: true, unique: true },
-  imageUrls: [{ type: String }],
-  category: { type: String },
+  marmitonUrl: { type: String, required: true },
+  marmitonId: { type: String, required: true, unique: true },
+  imagesUrls: [{ type: String }],
+  categories: [{ type: String }],
   title: { type: String, required: true },
-  datePublished: { type: Date, required: true },
-  prepTime: { type: Number },
-  cookTime: { type: Number },
+  preparationTime: { type: Number },
+  cookingTime: { type: Number },
+  restTime: { type: Number },
   totalTime: { type: Number },
-  difficulty: {
-    type: String, //easy medium hard --> difficulty object
-    enum: ["facile", "moyen", "difficile"],
-  },
+  rating: { type: Number },
+  ratingCount: { type: Number },
+  cost: { type: Number },
+  difficulty: { type: Number },
+  isSeasonal: { type: Boolean, required: true },
+  isGlutenFree: { type: Boolean, required: true },
+  isLactoseFree: { type: Boolean, required: true },
   isVegetarian: { type: Boolean, required: true },
   isVegan: { type: Boolean, required: true },
-  isLactoseFree: { type: Boolean, required: true },
-  isGlutenFree: { type: Boolean, required: true },
+  isPorkFree: { type: Boolean, required: true },
+  isSweet: { type: Boolean, required: true },
+  isSalty: { type: Boolean, required: true },
   instructions: [
     {
-      "@type": {
-        type: String,
-        required: true,
-      },
-      text: {
-        type: String,
-        required: true,
-      },
+      _id: false,
+      text: { type: String },
+      position: { type: Number },
+      duration: { type: Number },
+      isPreparationStep: { type: Boolean },
+      isCookingStep: { type: Boolean },
+      isRestStep: { type: Boolean },
+      ingredientsStep: [
+        {
+          name: { type: String },
+          imgUrl: { type: String },
+          _id: false,
+        },
+      ],
     },
   ],
+  preferredNumberIngr: { type: Number },
   ingredients: [
     {
       idIngredient: { type: Schema.Types.ObjectId, ref: "Ingredient" },
       quantity: { type: Number },
-      unit: { type: String }, //unit as a string or define object?
+      unit: { type: String },
+      _id: false,
     },
   ],
+  utensils: [
+    {
+      idUtensil: { type: Schema.Types.ObjectId, ref: "Utensil" },
+      quantity: { type: Number },
+      _id: false,
+    },
+  ],
+  nutriScore: { type: String },
+  ecoScore: { type: String },
   utensiles: [{ idUtensile: Schema.Types.ObjectId }],
   author: { type: String, required: true },
-  description: [{ type: String, required: true }],
-  keywords: [{ type: String, required: true }],
   type: { type: String },
-  note: {
-    "@type": { type: String, required: true },
-    reviewCount: { type: Number, required: true },
-    ratingValue: { type: Number, required: true },
-    worstRating: { type: Number, required: true },
-    bestRating: { type: Number, required: true },
-  },
 });
 
 module.exports = model("Recette", recetteModel);

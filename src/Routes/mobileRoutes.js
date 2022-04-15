@@ -121,21 +121,31 @@ routerMobile.get(
           }
         }
         if (filter.difficulty) {
-          try {
-            filter.difficulty.forEach((typ) => {
-              if (
-                typeof typ !== "string" ||
-                (typ !== "facile" && typ !== "moyen" && typ !== "difficile")
-              ) {
-                throw new Error(
-                  "filter.difficulty must be an array of 'facile','moyen','difficile',"
-                );
+          if (filter.difficulty.min) {
+            try {
+              if (isNumerica(filter.difficulty.min)) {
+                if (typeof filter.difficulty.min === "string") {
+                  filter.difficulty.min = parseInt(filter.difficulty.min);
+                }
+              } else {
+                throw new Error("difficulty minimum must be an int");
               }
-            });
-          } catch (err) {
-            throw new Error(
-              "filter.difficulty must be an array of 'facile','moyen','difficile',"
-            );
+            } catch (err) {
+              throw new Error("difficulty minimum must be an int");
+            }
+          }
+          if (filter.difficulty.max) {
+            try {
+              if (isNumerica(filter.difficulty.max)) {
+                if (typeof filter.difficulty.max === "string") {
+                  filter.difficulty.max = parseInt(filter.difficulty.max);
+                }
+              } else {
+                throw new Error("difficulty maximum must be an int");
+              }
+            } catch (err) {
+              throw new Error("difficulty maximum must be an int");
+            }
           }
         }
         req.query.correctFilter = filter;
@@ -211,6 +221,34 @@ routerMobile.get(
             }
           }
         }
+        if (filter.difficulty) {
+          if (filter.difficulty.min) {
+            try {
+              if (isNumerica(filter.difficulty.min)) {
+                if (typeof filter.difficulty.min === "string") {
+                  filter.difficulty.min = parseInt(filter.difficulty.min);
+                }
+              } else {
+                throw new Error("difficulty minimum must be an int");
+              }
+            } catch (err) {
+              throw new Error("difficulty minimum must be an int");
+            }
+          }
+          if (filter.difficulty.max) {
+            try {
+              if (isNumerica(filter.difficulty.max)) {
+                if (typeof filter.difficulty.max === "string") {
+                  filter.difficulty.max = parseInt(filter.duration.max);
+                }
+              } else {
+                throw new Error("difficulty maximum must be an int");
+              }
+            } catch (err) {
+              throw new Error("difficulty maximum must be an int");
+            }
+          }
+        }
         if (filter.type) {
           try {
             filter.type.forEach((typ) => {
@@ -266,24 +304,7 @@ routerMobile.get(
             );
           }
         }
-        if (filter.difficulty) {
-          try {
-            filter.difficulty.forEach((typ) => {
-              if (
-                typeof typ !== "string" ||
-                (typ !== "facile" && typ !== "moyen" && typ !== "difficile")
-              ) {
-                throw new Error(
-                  "filter.difficulty must be an array of 'facile','moyen','difficile',"
-                );
-              }
-            });
-          } catch (err) {
-            throw new Error(
-              "filter.difficulty must be an array of 'facile','moyen','difficile',"
-            );
-          }
-        }
+
         req.query.correctFilter = filter;
         return true;
       }),

@@ -2,6 +2,7 @@ const Mongoose = require("mongoose");
 
 import recetteModel from "../Model/recetteModel";
 import ingredientModel from "../Model/ingredientModel";
+import utensilModel from "../Model/utensilModel";
 
 import HttpError from "../Model/util/httpError";
 
@@ -58,6 +59,41 @@ const postRecette = async (req, res, next) => {
 
 const addRec = async (req, res, next) => {
   //TODO --> Vérify INput Error --> Check moogoose validators
+  console.log(req.body);
+  const newRecette = new recetteModel({
+    marmitonUrl: req.body.marmitonUrl,
+    marmitonId: req.body.marmitonId,
+    imagesUrls: req.body.imagesUrls,
+    categories: req.body.categories,
+    title: req.body.name,
+    preparationTime: req.body.prepTime,
+    cookingTime: req.body.cookingTime,
+    restTime: req.body.restTime,
+    totalTime: req.body.totalTime,
+    rating: req.body.rating,
+    ratingCount: req.body.ratingCount,
+    cost: req.body.cost,
+    difficulty: req.body.difficulty,
+    preferredNumberIngr: req.body.preferredNumberIngr,
+    instructions: req.body.steps,
+    author: req.body.author,
+    cookTime: req.body.cookTime,
+    totalTime: req.body.totalTime,
+    ingredients: [],
+    utensiles: [],
+    author: req.body.author,
+    type: req.body.type,
+    nutriScore: req.body.nutriScore,
+    ecoScore: req.body.ecoScore,
+    isSeasonal: req.body.isSeasonal,
+    isGlutenFree: req.body.isGlutenFree,
+    isLactoseFree: req.body.isLactoseFree,
+    isVegetarian: req.body.isVegetarian,
+    isVegan: req.body.isVegan,
+    isPorkFree: req.body.isPorkFree,
+    isSweet: req.body.isSweet,
+    isSalty: req.body.isSalty,
+  });
 
   let newIngredients = [];
   let ingredientsfinalArray = [];
@@ -66,12 +102,14 @@ const addRec = async (req, res, next) => {
     let existingIngredient;
     try {
       existingIngredient = await ingredientModel.findOne({
-        name: ingredient.name,
+        marmitonId: ingredient.marmitonId,
       });
       if (!existingIngredient) {
         const newIngredient = new ingredientModel({
           name: ingredient.name,
-          imageUrl: ingredient.imageUrl,
+          imgUrl: ingredient.imageUrl,
+          marmitonId: ingredient.marmitonId,
+          idsRecette: [newRecette._id],
         });
         newIngredients.push(newIngredient);
         ingredientsfinalArray.push({
@@ -80,6 +118,7 @@ const addRec = async (req, res, next) => {
           unit: ingredient.unit,
         });
       } else {
+        existingIngredient.idsRecette.push(newRecette._id);
         ingredientsfinalArray.push({
           idIngredient: existingIngredient._id,
           quantity: ingredient.quantity,
@@ -92,47 +131,57 @@ const addRec = async (req, res, next) => {
       return next(error);
     }
   }
-
-  console.log(req.body.images);
-
-  const newRecette = new recetteModel({
-    marmitonUrl: req.body.url,
-    imageUrls: req.body.images,
-    title: req.body.name,
-    category: req.body.recipeCategory,
-    datePublished: req.body.datePublished,
-    prepTime: req.body.prepTime,
-    cookTime: req.body.cookTime,
-    totalTime: req.body.totalTime,
-    difficulty: "facile",
-    isVegetarian: false,
-    isVegan: false,
-    isLactoseFree: false,
-    isGlutenFree: false,
-    instructions: req.body.step,
-    author: req.body.author,
-    cookTime: req.body.cookTime,
-    totalTime: req.body.totalTime,
-    ingredients: ingredientsfinalArray,
-    utensiles: [],
-    author: req.body.author,
-    description: req.body.description,
-    keywords: req.body.keywords,
-    type: req.body.type,
-    note: req.body.note,
-  });
-  console.log(newRecette);
-
+  let newUtensils = [];
+  let utensilsFinalArray = [];
+  for (let index = 0; index < req.body.utensils.length; index++) {
+    const utensil = req.body.utensils[index];
+    let existingUtensil;
+    try {
+      existingUtensil = await utensilModel.findOne({
+        marmitonId: utensil.marmitonId,
+      });
+      if (!existingUtensil) {
+        const newUtensil = new utensilModel({
+          name: utensil.name,
+          imgUrl: utensil.imageUrl,
+          marmitonId: utensil.marmitonId,
+          idsRecette: [newRecette._id],
+        });
+        newUtensils.push(newUtensil);
+        utensilsFinalArray.push({
+          idUtensil: newUtensil._id,
+          quantity: utensil.quantity,
+        });
+      } else {
+        existingUtensil.idsRecette.push(newRecette._id);
+        utensilsFinalArray.push({
+          idUtensil: existingUtensil._id,
+          quantity: utensil.quantity,
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      const error = new HttpError("Ooops An error Occured", 500);
+      return next(error);
+    }
+  }
+  console.log(utensilsFinalArray);
+  newRecette.ingredients = ingredientsfinalArray;
+  newRecette.utensils = utensilsFinalArray;
+  const sess = await Mongoose.startSession();
   try {
-    const sess = await Mongoose.startSession();
     sess.startTransaction();
     for (let index = 0; index < newIngredients.length; index++) {
       await newIngredients[index].save({ session: sess });
     }
+    for (let index = 0; index < newUtensils.length; index++) {
+      await newUtensils[index].save({ session: sess });
+    }
     await newRecette.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    console.log("runTransactionWithRetry error: ");
+    await sess.abortTransaction();
+    console.log(err);
     const error = new HttpError("Error saving Catégorie", 500);
     return next(error);
   }

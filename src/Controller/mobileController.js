@@ -60,11 +60,6 @@ const searchByName = async (req, res, next) => {
               type: { $in: filter.type },
             }),
           ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.length !== 0 && {
-              difficulty: { $in: filter.difficulty },
-            }),
-          ...(filter &&
             filter.isVegetarian && {
               isVegetarian: true,
             }),
@@ -90,7 +85,7 @@ const searchByName = async (req, res, next) => {
             filter.duration &&
             filter.duration.max &&
             !filter.duration.min && {
-              totalTime: { $gte: filter.duration.min },
+              totalTime: { $lte: filter.duration.min },
             }),
           ...(filter &&
             filter.duration &&
@@ -101,14 +96,35 @@ const searchByName = async (req, res, next) => {
                 $gte: filter.duration.min,
               },
             }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.min &&
+            !filter.difficulty.max && {
+              difficulty: { $gte: filter.difficulty.min },
+            }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.max &&
+            !filter.difficulty.min && {
+              difficulty: { $lte: filter.difficulty.max },
+            }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.max &&
+            filter.difficulty.min && {
+              difficulty: {
+                $lte: filter.difficulty.max,
+                $gte: filter.difficulty.min,
+              },
+            }),
         },
         { score: { $meta: "textScore" } }
       )
       .select(
-        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls , totalTime "
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
       )
       .sort({ score: { $meta: "textScore" } });
-
+    console.log(filter);
     let ids = [];
     products.forEach((element) => {
       ids.push(element._id);
@@ -126,11 +142,6 @@ const searchByName = async (req, res, next) => {
               type: { $in: filter.type },
             }),
           ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.length !== 0 && {
-              difficulty: { $in: filter.difficulty },
-            }),
-          ...(filter &&
             filter.isVegetarian && {
               isVegetarian: true,
             }),
@@ -156,7 +167,7 @@ const searchByName = async (req, res, next) => {
             filter.duration &&
             filter.duration.max &&
             !filter.duration.min && {
-              totalTime: { $gte: filter.duration.min },
+              totalTime: { $lte: filter.duration.min },
             }),
           ...(filter &&
             filter.duration &&
@@ -167,10 +178,31 @@ const searchByName = async (req, res, next) => {
                 $gte: filter.duration.min,
               },
             }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.min &&
+            !filter.difficulty.max && {
+              difficulty: { $gte: filter.difficulty.min },
+            }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.max &&
+            !filter.difficulty.min && {
+              difficulty: { $lte: filter.difficulty.max },
+            }),
+          ...(filter &&
+            filter.difficulty &&
+            filter.difficulty.max &&
+            filter.difficulty.min && {
+              difficulty: {
+                $lte: filter.difficulty.max,
+                $gte: filter.difficulty.min,
+              },
+            }),
           _id: { $nin: ids },
         })
         .select(
-          "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls , totalTime "
+          "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
         );
     } catch (err) {
       console.log(err);
@@ -178,8 +210,8 @@ const searchByName = async (req, res, next) => {
     }
     products.push(...productsplus);
     products.forEach((product) => {
-      if (product.imageUrls.length === 0) {
-        product.imageUrls.push(
+      if (product.imagesUrls.length === 0) {
+        product.imgUrls.push(
           "https://www.chezpatchouka.com/wp-content/uploads/2018/12/oups-oops.jpg"
         );
       }
@@ -189,7 +221,7 @@ const searchByName = async (req, res, next) => {
     return next(new HttpError("Error Server", 500));
   }
   res.status(201).json({
-    recette: products.map((prod) => prod.toObject({ getters: true })),
+    recettes: products.map((prod) => prod.toObject({ getters: true })),
   });
 };
 
