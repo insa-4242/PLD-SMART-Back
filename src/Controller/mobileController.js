@@ -109,13 +109,6 @@ const searchByName = async (req, res, next) => {
         "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imageUrls , totalTime "
       )
       .sort({ score: { $meta: "textScore" } });
-    products.forEach((product) => {
-      if (product.imageUrls.length === 0) {
-        product.imageUrls.push(
-          "https://www.chezpatchouka.com/wp-content/uploads/2018/12/oups-oops.jpg"
-        );
-      }
-    });
 
     let ids = [];
     let productsplus = [];
@@ -181,8 +174,14 @@ const searchByName = async (req, res, next) => {
       console.log(err);
       return next(new HttpError("Error Server", 500));
     }
-
     products.push(...productsplus);
+    products.forEach((product) => {
+      if (product.imageUrls.length === 0) {
+        product.imageUrls.push(
+          "https://www.chezpatchouka.com/wp-content/uploads/2018/12/oups-oops.jpg"
+        );
+      }
+    });
   } catch (err) {
     console.log(err);
     return next(new HttpError("Error Server", 500));
