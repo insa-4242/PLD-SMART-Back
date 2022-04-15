@@ -48,7 +48,6 @@ const searchByName = async (req, res, next) => {
   }
 
   const filter = req.query.correctFilter;
-  console.log(filter);
   let products = [];
   try {
     products = await recetteModel
@@ -111,13 +110,16 @@ const searchByName = async (req, res, next) => {
       .sort({ score: { $meta: "textScore" } });
 
     let ids = [];
+    products.forEach((element) => {
+      ids.push(element._id);
+    });
     let productsplus = [];
 
     try {
       let regex = `${req.query.keyword}`;
       productsplus = await recetteModel
         .find({
-          name: { $regex: regex, $options: "i" },
+          title: { $regex: regex, $options: "i" },
           ...(filter &&
             filter.type &&
             filter.type.length !== 0 && {

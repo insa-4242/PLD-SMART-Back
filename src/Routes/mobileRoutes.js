@@ -7,6 +7,7 @@ import {
   searchByIngrId,
 } from "../Controller/mobileController";
 const { check, isISO8601 } = require("express-validator");
+const mongoose = require("mongoose");
 
 const routerMobile = Router();
 
@@ -159,15 +160,17 @@ routerMobile.get(
     check("idIngrs").not().isEmpty(),
     check("idIngrs").isArray(),
     check("idIngrs").custom((value) => {
+      value = JSON.parse(value);
       let arrayId = [];
       try {
         value.forEach((val) => {
-          arrayId.push(ObjectId(val));
+          arrayId.push(mongoose.Types.ObjectId(val));
         });
       } catch (err) {
         console.log(err);
-        return false;
+        throw new Error("IdIng must be an MongoDBID");
       }
+      req.query.correctArrayId = arrayId;
       return true;
     }),
     check("filter")
