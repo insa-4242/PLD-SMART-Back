@@ -54,11 +54,11 @@ const options = {
 };
 
 const specs = swaggerJsdoc(options);
-/* app.use(
+app.use(
   "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(specs, { explorer: true })
-); */
+);
 //Defines Routes
 app.use("/api/recette", routerRecette);
 app.use("/api/mobile", routerMobile);
