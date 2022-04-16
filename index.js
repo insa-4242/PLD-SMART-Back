@@ -28,7 +28,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-
 const options = {
   definition: {
     openapi: "3.0.0",
