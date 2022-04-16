@@ -1,4 +1,6 @@
-import { Schema, model } from "mongoose";
+const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
 
 const recetteModel = new Schema({
   //on a besoin d'une objectID pour chaque entité ou est-ce que c'est crée automatiquement? :non, Cest à mongoose de la créer
@@ -64,4 +66,4 @@ const recetteModel = new Schema({
   type: { type: String },
 });
 
-module.exports = model("Recette", recetteModel);
+module.exports = mongoose.model("Recette", recetteModel);

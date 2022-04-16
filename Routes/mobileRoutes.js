@@ -1,15 +1,9 @@
-import { Router } from "express";
-import {
-  getRecettebyId,
-  autocompleteIngr,
-  searchByName,
-  autocompleteNameRecette,
-  searchByIngr,
-} from "../Controller/mobileController";
-const { check, isISO8601 } = require("express-validator");
-const mongoose = require("mongoose");
+const express = require("express");
+const routerMobile = express.Router();
+const mobileController = require("../Controller/mobileController");
 
-const routerMobile = Router();
+const { check } = require("express-validator");
+const mongoose = require("mongoose");
 
 function isNumerica(str) {
   if (typeof str === "boolean") return false;
@@ -21,7 +15,198 @@ function isNumerica(str) {
     ); // ...and ensure strings of whitespace fail
   }
 }
-
+/**
+ * @swagger
+ * tags:
+ *  name: Mobile - Home
+ *  description: HomePage of Flutter App
+ *
+ */
+/**
+ * @swagger
+ *  /api/mobile/recette/{id}:
+ *    get:
+ *      summary: Returns all infos on recipe
+ *      tags: [Mobile - Home]
+ *      description: Get all info on a recipe
+ *      parameters:
+ *        - name: id
+ *          in: path
+ *          example: 6259d4e7e2dc91c928c3a147
+ *          required: true
+ *          schema:
+ *            type: string
+ *          description: The id
+ *      responses:
+ *        '201':
+ *          description: A Sucess
+ *          content:
+ *            application/json:
+ *                type: object
+ *        '500':
+ *         description: Serveur Error
+ *        '402':
+ *         description: Error Input
+ *
+ * /api/mobile/namesearch:
+ *    get:
+ *      summary: Returns a list of recette based on recipe name.
+ *      tags: [Mobile - Home]
+ *      description: Get a list of Recette With Keyword
+ *      parameters:
+ *        - name: keyword
+ *          in: query
+ *          example: chocolat
+ *          required: true
+ *          schema:
+ *            type: string
+ *          description: The query input
+ *        - name: filter
+ *          style: form
+ *          required: false
+ *          explode: true
+ *          description: The filters available
+ *          in: query
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Filter'
+ *      responses:
+ *        '201':
+ *          description: A Sucess
+ *          content:
+ *            application/json:
+ *                type: object
+ *        '500':
+ *         description: Serveur Error
+ *        '402':
+ *         description: Error Input
+ *
+ * /api/mobile/ingredientSearch:
+ *    get:
+ *      summary: Returns a list of recette based on ingredients.
+ *      tags: [Mobile - Home]
+ *      description: Get a list of Recette With Keywords
+ *      parameters:
+ *        - name: keywords
+ *          in: query
+ *          required: true
+ *          content:
+ *            application/json:
+ *              schema:
+ *                type: array
+ *                items:
+ *                  type: string
+ *                  example: "Dessert"
+ *                example: ["chocolat", "farine"]
+ *          description: The query input
+ *        - name: filter
+ *          style: form
+ *          required: false
+ *          explode: true
+ *          description: The filters available
+ *          in: query
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/Filter'
+ *      responses:
+ *        '201':
+ *          description: A Sucess
+ *          content:
+ *            application/json:
+ *                type: object
+ *        '500':
+ *         description: Serveur Error
+ *        '402':
+ *         description: Error Input
+ *
+ * /api/mobile/autocomplete/recetteName:
+ *    get:
+ *      summary: Returns a list of recette's name based on user input.
+ *      tags: [Mobile - Home]
+ *      description: Get a list of Recette With Keywords
+ *      parameters:
+ *        - name: keyword
+ *          in: query
+ *          required: true
+ *          type: string
+ *          description: The query input
+ *          example: tart
+ *      responses:
+ *        '201':
+ *          description: A Sucess
+ *          content:
+ *            application/json:
+ *                type: object
+ *        '500':
+ *         description: Serveur Error
+ *        '402':
+ *         description: Error Input
+ *
+ * /api/mobile/autocomplete/ingredient:
+ *    get:
+ *      summary: Returns a list of ingredient's name based on user input.
+ *      tags: [Mobile - Home]
+ *      description: Get a list of Recette With Keywords
+ *      parameters:
+ *        - name: keyword
+ *          in: query
+ *          required: true
+ *          type: string
+ *          description: The query input
+ *          example: chocol
+ *      responses:
+ *        '201':
+ *          description: A Sucess
+ *          content:
+ *            application/json:
+ *                type: object
+ *        '500':
+ *         description: Serveur Error
+ *        '402':
+ *         description: Error Input
+ * components:
+ *  schemas:
+ *    Filter:
+ *      type: object
+ *      properties:
+ *        regime:
+ *          type: array
+ *          items:
+ *            type: string
+ *            enum:
+ *              - gluttenfree
+ *              - lactosefree
+ *              - vegan
+ *              - vegetarian
+ *            example: "vegetarian"
+ *        type:
+ *          type: array
+ *          items:
+ *            type: string
+ *          example: ["Dessert"]
+ *        duration:
+ *          type: object
+ *          properties:
+ *            min:
+ *              type: integer
+ *              format: int64
+ *            max:
+ *              type: integer
+ *              format: int64
+ *              example: 15000
+ *        difficulty:
+ *          type: object
+ *          properties:
+ *            min:
+ *              type: integer
+ *              format: int64
+ *            max:
+ *              type: integer
+ *              format: int64
+ *              example: 5
+ */
 routerMobile.get(
   "/namesearch",
   [
@@ -152,17 +337,17 @@ routerMobile.get(
         return true;
       }),
   ],
-  searchByName
+  mobileController.searchByName
 );
 routerMobile.get(
   "/autocomplete/ingredient",
   [check("keyword").not().isEmpty(), check("keyword").isString()],
-  autocompleteIngr
+  mobileController.autocompleteIngr
 );
 routerMobile.get(
   "/autocomplete/recetteName",
   [check("keyword").not().isEmpty(), check("keyword").isString()],
-  autocompleteNameRecette
+  mobileController.autocompleteNameRecette
 );
 routerMobile.get(
   "/ingredientSearch",
@@ -312,8 +497,7 @@ routerMobile.get(
         return true;
       }),
   ],
-  searchByIngr
+  mobileController.searchByIngr
 );
-routerMobile.get("/:id", getRecettebyId);
-
-export default routerMobile;
+routerMobile.get("/recette/:id", mobileController.getRecettebyId);
+module.exports = routerMobile;

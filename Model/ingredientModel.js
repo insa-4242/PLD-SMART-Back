@@ -1,4 +1,6 @@
-import { Schema, model } from "mongoose";
+const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
 
 const ingredientModel = new Schema({
   name: { type: String, required: true },
@@ -12,4 +14,4 @@ const ingredientModel = new Schema({
   ],
 });
 
-module.exports = model("Ingredient", ingredientModel);
+module.exports = mongoose.model("Ingredient", ingredientModel);

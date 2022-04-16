@@ -1,9 +1,8 @@
 const Mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
-
-import recetteModel from "../Model/recetteModel";
-import ingredientModel from "../Model/ingredientModel";
-import HttpError from "../Model/util/httpError";
+const recetteModel = require("../Model/recetteModel");
+const ingredientModel = require("../Model/ingredientModel");
+const HttpError = require("../Model/util/httpError");
 
 const getRecettebyId = async (req, res, next) => {
   const idRecette = req.params.id;
@@ -36,6 +35,7 @@ const getRecettebyId = async (req, res, next) => {
 
 const searchByName = async (req, res, next) => {
   //Verify UserInput
+
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -220,9 +220,11 @@ const searchByName = async (req, res, next) => {
     console.log(err);
     return next(new HttpError("Error Server", 500));
   }
+
   res.status(201).json({
     recettes: products.map((prod) => prod.toObject({ getters: true })),
   });
+  console.log(products);
 };
 
 const searchByIngr = async (req, res, next) => {

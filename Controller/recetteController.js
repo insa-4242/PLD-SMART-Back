@@ -1,10 +1,8 @@
 const Mongoose = require("mongoose");
 
-import recetteModel from "../Model/recetteModel";
-import ingredientModel from "../Model/ingredientModel";
-import utensilModel from "../Model/utensilModel";
-
-import HttpError from "../Model/util/httpError";
+const recetteModel = require("../Model/recetteModel");
+const ingredientModel = require("../Model/ingredientModel");
+const HttpError = require("../Model/util/httpError");
 
 const getRecette = async (req, res, next) => {
   let existingRecette;
