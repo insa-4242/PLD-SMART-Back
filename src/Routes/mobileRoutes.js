@@ -4,7 +4,7 @@ import {
   autocompleteIngr,
   searchByName,
   autocompleteNameRecette,
-  searchByIngrId,
+  searchByIngr,
 } from "../Controller/mobileController";
 const { check, isISO8601 } = require("express-validator");
 const mongoose = require("mongoose");
@@ -167,20 +167,23 @@ routerMobile.get(
 routerMobile.get(
   "/ingredientSearch",
   [
-    check("idIngrs").not().isEmpty(),
-    check("idIngrs").isArray(),
-    check("idIngrs").custom((value) => {
-      value = JSON.parse(value);
-      let arrayId = [];
+    check("keywords").not().isEmpty(),
+    check("keywords").custom((value, { req }) => {
+      let arrayKeywords;
       try {
-        value.forEach((val) => {
-          arrayId.push(mongoose.Types.ObjectId(val));
-        });
+        arrayKeywords = JSON.parse(value);
       } catch (err) {
         console.log(err);
-        throw new Error("IdIng must be an MongoDBID");
+        throw new Error("Not a good Array in keywords");
       }
-      req.query.correctArrayId = arrayId;
+      console.log(arrayKeywords);
+      arrayKeywords.forEach((keyword) => {
+        if (typeof keyword !== "string") {
+          console.log("ezfezfeze");
+          throw new Error("Not a good Array of string in keywords");
+        }
+      });
+      req.correctKewords = arrayKeywords;
       return true;
     }),
     check("filter")
@@ -309,7 +312,7 @@ routerMobile.get(
         return true;
       }),
   ],
-  searchByIngrId
+  searchByIngr
 );
 routerMobile.get("/:id", getRecettebyId);
 

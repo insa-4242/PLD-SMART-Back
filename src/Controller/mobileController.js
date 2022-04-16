@@ -225,37 +225,29 @@ const searchByName = async (req, res, next) => {
   });
 };
 
-const searchByIngrId = async (req, res, next) => {
+const searchByIngr = async (req, res, next) => {
+  //Verify User Input
   const errors = validationResult(req);
-
-  /*  if (!errors.isEmpty()) {
+  if (!errors.isEmpty()) {
     console.log(errors);
     let msg = "";
     errors.array().forEach((element) => {
       msg += JSON.stringify(element);
     });
     return next(new HttpError(msg, 422));
-  } */
-  /**input: array of ingredient IDs stocked in req.query.ingredIDs
-    [id1,id2,id3]
-    outut: array of recepies which contain at least one of these ingredients
-    useful: the Schema ingredientModel holds now a Array of Recepies
+  }
+  console.log(req.correctKewords);
+  let listofIngr;
+  try {
+    listofIngr = await ingredientModel.find({ cookingTime: 1800 });
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("Error Server", 500));
+  }
 
-    CODE:
-    allerecepiesID = []
-    ingredArray.forEach(value) =>{
-      value.idsRecette.forEach(recetteID) => {
-        allrecepiesID.push(recetteID)
-      }
-    }
-    allerecepiesID.deleteDoubles;
-    RecetteModel.find(id in allerecepiesID)
-  **/
-
-  console.log(req.params.ingredIDs);
-  const demiIngredient1 = new ingredientModel({});
+  const listofRecette = await oskarFunction(listofIngr);
   res.status(201).json({
-    recette: "products.map((prod) => prod.toObject({ getters: true }))",
+    recettes: listofRecette,
   });
 };
 
@@ -362,7 +354,16 @@ const autocompleteNameRecette = async (req, res, next) => {
   });
 };
 
-exports.searchByIngrId = searchByIngrId;
+/**
+ * oskarFunction : Take a list of Ingr and return a list of Recette
+ *
+ * @param {*} listofOfIngr
+ */
+const oskarFunction = async (listofOfIngr) => {
+  return [];
+};
+
+exports.searchByIngr = searchByIngr;
 exports.getRecettebyId = getRecettebyId;
 exports.searchByName = searchByName;
 exports.autocompleteIngr = autocompleteIngr;
