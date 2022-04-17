@@ -238,16 +238,27 @@ const searchByIngr = async (req, res, next) => {
     });
     return next(new HttpError(msg, 422));
   }
-  console.log(req.correctKewords);
-  let listofIngr;
+  console.log(req.correctKewords.join(" "));
+  console.log(req.query.correctFilter);
+  let listofIngr = [];
   try {
-    listofIngr = await ingredientModel.find({ cookingTime: 1800 });
+    listofIngr = await ingredientModel
+      .find(
+        {
+          $text: { $search: req.correctKewords.join(" ") },
+        },
+        { score: { $meta: "textScore" } }
+      )
+      .sort({ score: { $meta: "textScore" } });
   } catch (err) {
     console.log(err);
     return next(new HttpError("Error Server", 500));
   }
 
-  const listofRecette = await oskarFunction(listofIngr);
+  const listofRecette = await oskarFunction(
+    listofIngr,
+    req.query.correctFilter
+  );
   res.status(201).json({
     recettes: listofRecette,
   });
@@ -361,7 +372,8 @@ const autocompleteNameRecette = async (req, res, next) => {
  *
  * @param {*} listofOfIngr
  */
-const oskarFunction = async (listofOfIngr) => {
+const oskarFunction = async (listofOfIngr, correctFilter) => {
+  console.log(listofOfIngr);
   return [];
 };
 

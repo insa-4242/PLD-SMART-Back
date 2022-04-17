@@ -1,4 +1,6 @@
-import { Schema, model } from "mongoose";
+const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
 
 const utensilModel = new Schema({
   name: { type: String, required: true },
@@ -12,4 +14,4 @@ const utensilModel = new Schema({
   ],
 });
 
-module.exports = model("Utensil", utensilModel);
+module.exports = mongoose.model("Utensil", utensilModel);

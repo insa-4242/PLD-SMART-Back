@@ -2,6 +2,7 @@ const Mongoose = require("mongoose");
 
 const recetteModel = require("../Model/recetteModel");
 const ingredientModel = require("../Model/ingredientModel");
+const utensilModel = require("../Model/utensilModel");
 const HttpError = require("../Model/util/httpError");
 
 const getRecette = async (req, res, next) => {
@@ -95,6 +96,7 @@ const addRec = async (req, res, next) => {
 
   let newIngredients = [];
   let ingredientsfinalArray = [];
+
   for (let index = 0; index < req.body.ingredients.length; index++) {
     const ingredient = req.body.ingredients[index];
     let existingIngredient;
@@ -116,6 +118,7 @@ const addRec = async (req, res, next) => {
           unit: ingredient.unit,
         });
       } else {
+        newIngredients.push(existingIngredient);
         existingIngredient.idsRecette.push(newRecette._id);
         ingredientsfinalArray.push({
           idIngredient: existingIngredient._id,
@@ -151,6 +154,7 @@ const addRec = async (req, res, next) => {
           quantity: utensil.quantity,
         });
       } else {
+        newUtensils.push(existingUtensil);
         existingUtensil.idsRecette.push(newRecette._id);
         utensilsFinalArray.push({
           idUtensil: existingUtensil._id,
