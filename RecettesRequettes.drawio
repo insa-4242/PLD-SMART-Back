@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="kgpKYQtTHZ0yAKxKKP6v" name="Page-1">
-        <mxGraphModel dx="809" dy="585" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="809" dy="332" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -36,7 +36,7 @@
                         <mxPoint x="700" y="220" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="7Kff_GVbFptVKYBIM-q_-3" value="GET /api/mobile/rcherchByIngred?ids=[id1,id2]" style="verticalAlign=bottom;endArrow=block;shadow=0;strokeWidth=1;" parent="1" source="7Kff_GVbFptVKYBIM-q_-5" target="7Kff_GVbFptVKYBIM-q_-6" edge="1">
+                <mxCell id="7Kff_GVbFptVKYBIM-q_-3" value="    http://localhost:8080/api/mobile/ingredientSearch?keywords=[&quot;pomme&quot;, &quot;chocolat&quot;, &quot;frites&quot;]" style="verticalAlign=bottom;endArrow=block;shadow=0;strokeWidth=1;" parent="1" source="7Kff_GVbFptVKYBIM-q_-5" target="7Kff_GVbFptVKYBIM-q_-6" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="180" y="250.0000000000001" as="sourcePoint"/>
                         <mxPoint x="700" y="250.0000000000001" as="targetPoint"/>

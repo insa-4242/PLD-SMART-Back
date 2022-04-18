@@ -7,9 +7,6 @@ const algo = require("../Model/util/algo.js");
 const req = require("express/lib/request");
 
 const getRecettebyId = async (req, res, next) => {
-  oskarFunction();
-  return;
-
   const idRecette = req.params.id;
   if (!idRecette) {
     const error = new HttpError("Please verify Syntax", 500);
@@ -265,7 +262,7 @@ const searchByIngr = async (req, res, next) => {
     req.query.correctFilter
   );
   res.status(201).json({
-    recettes: listofRecette,
+    recettes: listofRecette.map((prod) => prod.toObject({ getters: true })),
   });
 };
 
@@ -381,31 +378,111 @@ const autocompleteNameRecette = async (req, res, next) => {
  */
 const oskarFunction = async (listofOfIngr, correctFilter) => {
   //get example input for listofOfIngr
-  let ingredients = [];
-  try {
-    ingredients = await ingredientModel.find({
+  //REMOVE BELOW
+  //listofOfIngr = [];
+  /* try {
+    listofOfIngr = await ingredientModel.find({
       $text: { $search: "pomme" },
     });
   } catch (err) {
     console.log(err);
-  }
-  console.log(ingredients);
+  } */
+  //REMOVE ABOVE
+  console.log(listofOfIngr);
 
   //put all recepie objectID into one array
   let recepieIds = [];
-  ingredients.forEach((i) => {
+  listofOfIngr.forEach((i) => {
     recepieIds = recepieIds.concat(i.idsRecette);
   });
 
-  console.log("recepieIds: \n", recepieIds);
+  //console.log("recepieIds: \n", recepieIds);
   //call algo function to retain relevant recepie IDs
-  recepieIds = algo.sortByOcccurrence(recepieIds, 2);
-  console.log("recepieIds, after sortByOccurrence: \n", recepieIds);
+  recepieIds = algo.sortByOcccurrence(recepieIds, 3);
+  //console.log("recepieIds, after sortByOccurrence: \n", recepieIds);
   //find the related recepies from the database and apply the filter to it
-  recepieIds.forEach(function (element) {
-    getRecettebyId();
-  });
-  return [];
+  //https://newbedev.com/mongodb-mongoose-findmany-find-all-documents-with-ids-listed-in-array
+  let foundRecepies = [];
+  const filter = correctFilter;
+  foundRecepies = await recetteModel
+    .find({
+      _id: { $in: recepieIds },
+      ...(filter &&
+        filter.type &&
+        filter.type.length !== 0 && {
+          type: { $in: filter.type },
+        }),
+      ...(filter &&
+        filter.isVegetarian && {
+          isVegetarian: true,
+        }),
+      ...(filter &&
+        filter.isVegan && {
+          isVegan: true,
+        }),
+      ...(filter &&
+        filter.isLactoseFree && {
+          isLactoseFree: true,
+        }),
+      ...(filter &&
+        filter.isGlutenFree && {
+          isGlutenFree: true,
+        }),
+      ...(filter &&
+        filter.duration &&
+        filter.duration.min &&
+        !filter.duration.max && {
+          totalTime: { $gte: filter.duration.min },
+        }),
+      ...(filter &&
+        filter.duration &&
+        filter.duration.max &&
+        !filter.duration.min && {
+          totalTime: { $lte: filter.duration.min },
+        }),
+      ...(filter &&
+        filter.duration &&
+        filter.duration.max &&
+        filter.duration.min && {
+          totalTime: {
+            $lte: filter.duration.max,
+            $gte: filter.duration.min,
+          },
+        }),
+      ...(filter &&
+        filter.difficulty &&
+        filter.difficulty.min &&
+        !filter.difficulty.max && {
+          difficulty: { $gte: filter.difficulty.min },
+        }),
+      ...(filter &&
+        filter.difficulty &&
+        filter.difficulty.max &&
+        !filter.difficulty.min && {
+          difficulty: { $lte: filter.difficulty.max },
+        }),
+      ...(filter &&
+        filter.difficulty &&
+        filter.difficulty.max &&
+        filter.difficulty.min && {
+          difficulty: {
+            $lte: filter.difficulty.max,
+            $gte: filter.difficulty.min,
+          },
+        }),
+    })
+    .populate({
+      path: "ingredients",
+      populate: {
+        path: "idIngredient",
+      },
+      path: "utensils",
+      populate: {
+        path: "idUtensil",
+      },
+    });
+  //console.log("possible Recepies: ", foundRecepies);
+  return foundRecepies;
 };
 
 exports.searchByIngr = searchByIngr;

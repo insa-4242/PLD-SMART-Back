@@ -2,6 +2,7 @@
  * array = [2, 3, 5, 2, 3, 3, 6, 5, 1, 1, 1, 2, 3, 9]
  * after applying lower Bound = 2:  [1, 2, 3, 5]
  * after sorting by occurrence: [3, 1, 2, 5]
+ * https://stackoverflow.com/questions/34396767/sort-array-by-occurrence-of-its-elements
  * @param {[String]} array Array of IDs, where an ID can occure more than once
  * @param {Number} lowerBound IDs which occure less then this lower bound will be dropped
  * @returns {[String]} Set of IDs (IDs unique), ordered by occurrence rate in the input array, descending
