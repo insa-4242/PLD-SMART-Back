@@ -40,10 +40,10 @@ Pour avoir accès à vos variable d'environnement en mode dev, vous devez créer
 
 # Postman example Requests
 
-http://localhost:8080/api/mobile/6256f8d7304cbd3d8473a4d2
 http://localhost:8080/api/mobile/namesearch?keyword=chocolat
 http://localhost:8080/api/mobile/namesearch?keyword=chocolat&filter={"duration":{"min":"8.655","max":"89"},"type":["Dessert"],"regime":["vegan","gluttenfree","lactosefree","vegetarian"],"difficulty":["facile"]}
-http://localhost:8080/api/mobile/ingredientSearch?idIngrs=["6256f8d6304cbd3d8473a4c7"]http://localhost:8080/api/mobile/ingredientSearch?idIngrs=["6256f8d6304cbd3d8473a4c7"]&filter={"duration":{"min":"11","max":"22"},"type":["Dessert"],"regime":["vegan","gluttenfree","vegetarian"],"difficulty":["facile"]}
+http://localhost:8080/api/mobile/ingredientSearch?idIngrs=["6256f8d6304cbd3d8473a4c7"]
+http://localhost:8080/api/mobile/ingredientSearch?idIngrs=["6256f8d6304cbd3d8473a4c7"]&filter={"duration":{"min":"11","max":"22"},"type":["Dessert"],"regime":["vegan","gluttenfree","vegetarian"],"difficulty":["facile"]}
 
 ```
 {

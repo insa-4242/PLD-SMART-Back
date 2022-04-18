@@ -3,8 +3,13 @@ const { validationResult } = require("express-validator");
 const recetteModel = require("../Model/recetteModel");
 const ingredientModel = require("../Model/ingredientModel");
 const HttpError = require("../Model/util/httpError");
+const algo = require("../Model/util/algo.js");
+const req = require("express/lib/request");
 
 const getRecettebyId = async (req, res, next) => {
+  oskarFunction();
+  return;
+
   const idRecette = req.params.id;
   if (!idRecette) {
     const error = new HttpError("Please verify Syntax", 500);
@@ -368,12 +373,38 @@ const autocompleteNameRecette = async (req, res, next) => {
 };
 
 /**
- * oskarFunction : Take a list of Ingr and return a list of Recette
+ * Take a list of Ingr and return a list of Recette
+ * useful: the Schema ingredientModel holds now a Array of Recepies
  *
- * @param {*} listofOfIngr
+ * @param {[Ingredient]} listofOfIngr List of ingredients
+ * @returns {[Recette]} List of recepies which contain at least one of these ingredients
  */
 const oskarFunction = async (listofOfIngr, correctFilter) => {
-  console.log(listofOfIngr);
+  //get example input for listofOfIngr
+  let ingredients = [];
+  try {
+    ingredients = await ingredientModel.find({
+      $text: { $search: "pomme" },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+  console.log(ingredients);
+
+  //put all recepie objectID into one array
+  let recepieIds = [];
+  ingredients.forEach((i) => {
+    recepieIds = recepieIds.concat(i.idsRecette);
+  });
+
+  console.log("recepieIds: \n", recepieIds);
+  //call algo function to retain relevant recepie IDs
+  recepieIds = algo.sortByOcccurrence(recepieIds, 2);
+  console.log("recepieIds, after sortByOccurrence: \n", recepieIds);
+  //find the related recepies from the database and apply the filter to it
+  recepieIds.forEach(function (element) {
+    getRecettebyId();
+  });
   return [];
 };
 
