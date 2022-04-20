@@ -4,7 +4,6 @@ const recetteModel = require("../Model/recetteModel");
 const ingredientModel = require("../Model/ingredientModel");
 const HttpError = require("../Model/util/httpError");
 const algo = require("../Model/util/algo.js");
-const req = require("express/lib/request");
 
 const getRecettebyId = async (req, res, next) => {
   const idRecette = req.params.id;
@@ -169,7 +168,7 @@ const searchByName = async (req, res, next) => {
             filter.duration &&
             filter.duration.max &&
             !filter.duration.min && {
-              totalTime: { $lte: filter.duration.min },
+              totalTime: { $lte: filter.duration.max },
             }),
           ...(filter &&
             filter.duration &&
@@ -240,8 +239,7 @@ const searchByIngr = async (req, res, next) => {
     });
     return next(new HttpError(msg, 422));
   }
-  console.log(req.correctKewords.join(" "));
-  console.log(req.query.correctFilter);
+
   let listofIngr = [];
   try {
     listofIngr = await ingredientModel
@@ -261,6 +259,7 @@ const searchByIngr = async (req, res, next) => {
     listofIngr,
     req.query.correctFilter
   );
+
   res.status(201).json({
     recettes: listofRecette.map((prod) => prod.toObject({ getters: true })),
   });
@@ -377,18 +376,7 @@ const autocompleteNameRecette = async (req, res, next) => {
  * @returns {[Recette]} List of recepies which contain at least one of these ingredients
  */
 const oskarFunction = async (listofOfIngr, correctFilter) => {
-  //get example input for listofOfIngr
-  //REMOVE BELOW
-  //listofOfIngr = [];
-  /* try {
-    listofOfIngr = await ingredientModel.find({
-      $text: { $search: "pomme" },
-    });
-  } catch (err) {
-    console.log(err);
-  } */
-  //REMOVE ABOVE
-  console.log(listofOfIngr);
+  //console.log(listofOfIngr);
 
   //put all recepie objectID into one array
   let recepieIds = [];
@@ -396,15 +384,12 @@ const oskarFunction = async (listofOfIngr, correctFilter) => {
     recepieIds = recepieIds.concat(i.idsRecette);
   });
 
-  //console.log("recepieIds: \n", recepieIds);
+  console.log("recepieIds: \n", recepieIds.length);
   //call algo function to retain relevant recepie IDs
   //prefere recepies that use as many ingredients as possible so initially as given
   //if those are less then 3, also accept recepies which use less.
-  let minIngredUtiParRecette = listofOfIngr.length();
-  do {
-    recepieIds = algo.sortByOcccurrence(recepieIds, minIngredUtiParRecette);
-    minIngredUtiParRecette--;
-  } while (recepieIds.length() < 3 || minIngredUtiParRecette != 0);
+  recepieIds = algo.sortByOcccurrence(recepieIds, 1);
+  console.log("recepieIds: \n", recepieIds.length);
   //console.log("recepieIds, after sortByOccurrence: \n", recepieIds);
   //find the related recepies from the database and apply the filter to it
   //https://newbedev.com/mongodb-mongoose-findmany-find-all-documents-with-ids-listed-in-array
@@ -444,7 +429,7 @@ const oskarFunction = async (listofOfIngr, correctFilter) => {
         filter.duration &&
         filter.duration.max &&
         !filter.duration.min && {
-          totalTime: { $lte: filter.duration.min },
+          totalTime: { $lte: filter.duration.max },
         }),
       ...(filter &&
         filter.duration &&
@@ -477,16 +462,9 @@ const oskarFunction = async (listofOfIngr, correctFilter) => {
           },
         }),
     })
-    .populate({
-      path: "ingredients",
-      populate: {
-        path: "idIngredient",
-      },
-      path: "utensils",
-      populate: {
-        path: "idUtensil",
-      },
-    });
+    .select(
+      "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+    );
   //console.log("possible Recepies: ", foundRecepies);
   return foundRecepies;
 };
