@@ -398,7 +398,13 @@ const oskarFunction = async (listofOfIngr, correctFilter) => {
 
   //console.log("recepieIds: \n", recepieIds);
   //call algo function to retain relevant recepie IDs
-  recepieIds = algo.sortByOcccurrence(recepieIds, 3);
+  //prefere recepies that use as many ingredients as possible so initially as given
+  //if those are less then 3, also accept recepies which use less.
+  let minIngredUtiParRecette = listofOfIngr.length();
+  do {
+    recepieIds = algo.sortByOcccurrence(recepieIds, minIngredUtiParRecette);
+    minIngredUtiParRecette--;
+  } while (recepieIds.length() < 3 || minIngredUtiParRecette != 0);
   //console.log("recepieIds, after sortByOccurrence: \n", recepieIds);
   //find the related recepies from the database and apply the filter to it
   //https://newbedev.com/mongodb-mongoose-findmany-find-all-documents-with-ids-listed-in-array
