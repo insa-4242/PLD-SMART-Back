@@ -240,28 +240,134 @@ const searchByIngr = async (req, res, next) => {
     return next(new HttpError(msg, 422));
   }
 
-  let listofIngr = [];
-  try {
-    listofIngr = await ingredientModel
-      .find(
-        {
-          $text: { $search: req.correctKewords.join(" ") },
-        },
-        { score: { $meta: "textScore" } }
-      )
-      .sort({ score: { $meta: "textScore" } });
-  } catch (err) {
-    console.log(err);
-    return next(new HttpError("Error Server", 500));
+  //Step1: create a listoflist who is gonna contains all the infos for each keywords
+  let listOflistOfRecette = [];
+  for (let index = 0; index < req.correctKewords.length; index++) {
+    const keyword = req.correctKewords[index];
+
+    // Let's try to get all the ingredient connected to ONE User keyword
+    let ingredientIndex = [];
+    try {
+      ingredientIndex = await ingredientModel
+        .find(
+          {
+            $text: { $search: keyword },
+          },
+          { score: { $meta: "textScore" } }
+        )
+        .sort({ score: { $meta: "textScore" } });
+    } catch (err) {
+      return next(new HttpError("Error Server", 500));
+    }
+
+    // Now we want to have the list of recette connected to all ingredients founded with ONE user keyword
+    let listOfIdsRecetteIndex = [];
+    ingredientIndex.forEach((element) => {
+      listOfIdsRecetteIndex = listOfIdsRecetteIndex.concat(
+        element.idsRecette.map((el) => el.toString())
+      );
+    });
+
+    //Remove dupplication without regarding the number of occurence
+    //Because we dont'care if there is multiple instance of ONE unique keyword in the final recipe
+    const ListUniqueIdsRecetteIndex = [...new Set(listOfIdsRecetteIndex)];
+
+    //Push the list in our listofIngr
+    listOflistOfRecette.push(ListUniqueIdsRecetteIndex);
   }
 
-  const listofRecette = await oskarFunction(
-    listofIngr,
-    req.query.correctFilter
-  );
+  // We are know looking for interseption of our listOflistOfRecette which is a list of Recette
+  // which are all in the ListUniqueIdsRecetteIndex for each keywords
+  let interseptArray = listOflistOfRecette[0];
+  for (let index = 0; index < listOflistOfRecette.length; index++) {
+    interseptArray = interseptArray.filter((value) =>
+      listOflistOfRecette[index].includes(value)
+    );
+  }
+  // Here if you want you can better our solution by not only recup interseption
+  // But also recipe wiche are in ALMOST every array but not all
 
+  //Let's find the recipe by id in DB
+  let filter = req.query.correctFilter;
+  let foundRecepies = [];
+  try {
+    foundRecepies = await recetteModel
+      .find({
+        _id: { $in: interseptArray },
+        ...(filter &&
+          filter.type &&
+          filter.type.length !== 0 && {
+            type: { $in: filter.type },
+          }),
+        ...(filter &&
+          filter.isVegetarian && {
+            isVegetarian: true,
+          }),
+        ...(filter &&
+          filter.isVegan && {
+            isVegan: true,
+          }),
+        ...(filter &&
+          filter.isLactoseFree && {
+            isLactoseFree: true,
+          }),
+        ...(filter &&
+          filter.isGlutenFree && {
+            isGlutenFree: true,
+          }),
+        ...(filter &&
+          filter.duration &&
+          filter.duration.min &&
+          !filter.duration.max && {
+            totalTime: { $gte: filter.duration.min },
+          }),
+        ...(filter &&
+          filter.duration &&
+          filter.duration.max &&
+          !filter.duration.min && {
+            totalTime: { $lte: filter.duration.max },
+          }),
+        ...(filter &&
+          filter.duration &&
+          filter.duration.max &&
+          filter.duration.min && {
+            totalTime: {
+              $lte: filter.duration.max,
+              $gte: filter.duration.min,
+            },
+          }),
+        ...(filter &&
+          filter.difficulty &&
+          filter.difficulty.min &&
+          !filter.difficulty.max && {
+            difficulty: { $gte: filter.difficulty.min },
+          }),
+        ...(filter &&
+          filter.difficulty &&
+          filter.difficulty.max &&
+          !filter.difficulty.min && {
+            difficulty: { $lte: filter.difficulty.max },
+          }),
+        ...(filter &&
+          filter.difficulty &&
+          filter.difficulty.max &&
+          filter.difficulty.min && {
+            difficulty: {
+              $lte: filter.difficulty.max,
+              $gte: filter.difficulty.min,
+            },
+          }),
+      })
+      .select(
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+      );
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("SERVER ERROR", 500));
+  }
+  console.log("possible Recepies: ", foundRecepies);
   res.status(201).json({
-    recettes: listofRecette.map((prod) => prod.toObject({ getters: true })),
+    recettes: foundRecepies.map((prod) => prod.toObject({ getters: true })),
   });
 };
 
@@ -472,7 +578,7 @@ const oskarFunction = async (listofOfIngr, correctFilter) => {
     .select(
       "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
     );
-  //console.log("possible Recepies: ", foundRecepies);
+
   return foundRecepies;
 };
 
