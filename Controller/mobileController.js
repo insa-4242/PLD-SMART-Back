@@ -278,12 +278,23 @@ const searchByIngr = async (req, res, next) => {
 
   // We are know looking for interseption of our listOflistOfRecette which is a list of Recette
   // which are all in the ListUniqueIdsRecetteIndex for each keywords
-  let interseptArray = listOflistOfRecette[0];
-  for (let index = 0; index < listOflistOfRecette.length; index++) {
-    interseptArray = interseptArray.filter((value) =>
-      listOflistOfRecette[index].includes(value)
+  // call nested algo function to retain relevant recepie IDs
+  // prefere recepies that use as many ingredients as possible so initially as given
+  //if those are less then 3, also accept recepies which use less.
+  let minIngredUtiParRecette = listOflistOfRecette.length;
+  let interseptArray = [];
+  do {
+    interseptArray = algo.sortByOcccurrenceNested(
+      listOflistOfRecette,
+      minIngredUtiParRecette
+      // (minIngredUtiParRecette = listOflistOfRecette.length) means that every recepie uses every ingredient type that the user searches
     );
-  }
+    minIngredUtiParRecette--;
+  } while (interseptArray.length < 1 && minIngredUtiParRecette > 1);
+  console.log(
+    "Minimal ingredients usage per recepie: ",
+    minIngredUtiParRecette + 1
+  );
   // Here if you want you can better our solution by not only recup interseption
   // But also recipe wiche are in ALMOST every array but not all
 
@@ -359,13 +370,13 @@ const searchByIngr = async (req, res, next) => {
           }),
       })
       .select(
-        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+        "_id, title , marmitonUrl , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
       );
   } catch (err) {
     console.log(err);
     return next(new HttpError("SERVER ERROR", 500));
   }
-  console.log("possible Recepies: ", foundRecepies);
+  console.log("possible Recepies: ", foundRecepies.length);
   res.status(201).json({
     recettes: foundRecepies.map((prod) => prod.toObject({ getters: true })),
   });
