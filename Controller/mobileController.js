@@ -290,7 +290,7 @@ const searchByIngr = async (req, res, next) => {
       // (minIngredUtiParRecette = listOflistOfRecette.length) means that every recepie uses every ingredient type that the user searches
     );
     minIngredUtiParRecette--;
-  } while (interseptArray.length < 1 && minIngredUtiParRecette > 1);
+  } while (interseptArray.length < 5 && minIngredUtiParRecette > 1);
   console.log(
     "Minimal ingredients usage per recepie: ",
     minIngredUtiParRecette + 1
