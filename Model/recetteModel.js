@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const mongoosePaginate = require("mongoose-paginate-v2");
 const Schema = mongoose.Schema;
 
 const recetteModel = new Schema({
@@ -65,5 +65,7 @@ const recetteModel = new Schema({
   author: { type: String, required: true },
   type: { type: String },
 });
+
+recetteModel.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Recette", recetteModel);

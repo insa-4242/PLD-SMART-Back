@@ -8,7 +8,7 @@ const HttpError = require("../Model/util/httpError");
 const getRecette = async (req, res, next) => {
   let existingRecette;
   try {
-    existingRecette = await recetteModel.find({});
+    existingRecette = await recetteModel.paginate({});
   } catch (err) {
     console.log(err);
     const error = new HttpError("Ooops An error Occured", 500);
@@ -18,10 +18,15 @@ const getRecette = async (req, res, next) => {
     const error = new HttpError("Don't have the right MF", 403);
     return next(error);
   }
-  console.log(existingRecette);
+  console.log(existingRecette.docs);
 
   res.status(201).json({
-    recette: existingRecette.map((elem) => elem.toObject({ getters: true })),
+    recette: {
+      ...existingRecette,
+      docs: existingRecette.docs.map((elem) =>
+        elem.toObject({ getters: true })
+      ),
+    },
   });
 };
 
