@@ -19,7 +19,6 @@
         alt="Photo du plat"
       />
       <h2>Une assiette avec un grand choix de fromage de toute la France!</h2>
-      <h3>Ingrédients</h3>
       <div id="ingredientBox">
         <div>
           <img
@@ -29,7 +28,7 @@
             height="10em"
             alt="Ingrédient"
           />
-          <p><b>Description de l'Ingrédient</b></p>
+          <p><b>Sel</b></p>
         </div>
         <div>
           <img
@@ -37,53 +36,81 @@
             src="183-Käsespätzle mit Röstzwiebeln_LR_v1-2.jpg"
             alt="Ingrédient"
           />
-          <p><b>Description de l'Ingrédient</b></p>
+          <p><b>Poivre</b></p>
         </div>
       </div>
       <div>
         <h3>Filtres et d'autres charactéristiques</h3>
         <div id="filter">
-          <p><b>Végétarien</b></p>
-          <p><b>Facile</b></p>
-          <p><b>Type</b></p>
-          <p><b>Durée</b></p>
-          <p><b>Seasonal</b></p>
-          <p><b>Sucrée</b></p>
-          <p><b>Rating</b></p>
+          <button id="vege" class="filterbtn">Végétarien</button>
+          <button id="difficulty" class="filterbtn">Facile</button>
+          <label for="duree"
+            ><input id="duree" type="number" min="0" value="20" step="5" />de
+            minutes</label
+          >
+          <button id="Rating" class="filterbtn">2.0/5 Étioles</button>
+          <button id="gluten" class="filterbtn">Sans Gluten</button>
         </div>
       </div>
     </section>
     <section>
       <form action="">
         <h3>Veuillez donner votre avais du plat!</h3>
-        <label for="boisson"
-          ><input id="boisson" type="checkbox" />Est un boisson?</label
-        >
-        <label for="poisson"
-          ><input id="poisson" type="checkbox" />Contient du poisson?</label
-        >
-        <div class="radiobtn">
-          <label for="t_exotique"
-            ><input id="t_exotique" type="radio" name="nationality" /> Très
-            Exotique</label
+        <fieldset>
+          <legend>Général</legend>
+          <label for="boisson"
+            ><input id="boisson" type="checkbox" />Est un boisson?</label
           >
-          <label for="outdoor"
-            ><input id="outdoor" type="radio" name="nationality" />
+          <label for="poisson"
+            ><input id="poisson" type="checkbox" />Contient du poisson?</label
+          >
+        </fieldset>
+        <fieldset>
+          <legend>Origine</legend>
+          <label for="exotique"
+            ><input id="exotique" type="radio" name="nationality" />
             Exotique</label
           >
           <label for="international"
             ><input id="international" type="radio" name="nationality" />
             International</label
           >
-          <label for="european"
-            ><input id="european" type="radio" name="nationality" />
-            Européen</label
-          >
           <label for="francais"
             ><input id="francais" type="radio" name="nationality" />
             Francais</label
           >
-        </div>
+        </fieldset>
+        <fieldset>
+          <legend>Saison</legend>
+          <label for="hivernal"
+            ><input id="hivernal" type="radio" name="saison" /> Hivernal</label
+          >
+          <label for="pas"
+            ><input id="pas" type="radio" name="saison" /> Pas de Saison</label
+          >
+          <label for="ete"
+            ><input id="ete" type="radio" name="saison" /> Été, frais</label
+          >
+        </fieldset>
+        <fieldset>
+          <legend>Gout</legend>
+          <label for="extra_sucre"
+            ><input id="extra_sucre" type="radio" name="douce" /> Sucrée et
+            extra sucre</label
+          >
+          <label for="sucre"
+            ><input id="sucre" type="radio" name="douce" /> À la base
+            sucrée</label
+          >
+          <label for="balance"
+            ><input id="balance" type="radio" name="douce" /> Balancée</label
+          >
+          <label for="releve"
+            ><input id="releve" type="radio" name="douce" /> Relevée
+            (Rôti)</label
+          >
+        </fieldset>
+        <!---
         <div class="slider">
           <input
             id="nationality"
@@ -129,6 +156,7 @@
             <li>Relevé (Rôti)</li>
           </ul>
         </div>
+        -->
         <button type="submit">Sauvegarde!</button>
         <button type="submit">Sauter!</button>
       </form>

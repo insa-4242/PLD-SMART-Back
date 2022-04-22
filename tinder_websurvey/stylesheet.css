@@ -16,8 +16,8 @@ section {
 }
 #thumpnail {
   object-fit: cover;
-  width: 30em;
-  height: 25em;
+  width: 20em;
+  height: 17em;
 }
 #ingredientBox {
   display: flex;
@@ -25,8 +25,8 @@ section {
 }
 .ingredient-image {
   object-fit: cover;
-  width: 10em;
-  height: 10em;
+  width: 8em;
+  height: 8em;
 }
 #filter {
   display: flex;
