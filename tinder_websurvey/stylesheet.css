@@ -1,0 +1,19 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+section {
+  width: 60em;
+  margin-left: auto;
+  margin-right: auto;
+}
+#thumpnail {
+  object-fit: cover;
+  width: 30em;
+  height: 25em;
+}
+.ingredient-image {
+  object-fit: cover;
+  width: 10em;
+  height: 10em;
+}

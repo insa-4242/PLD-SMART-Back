@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <link rel="stylesheet" href="stylesheet.css" />
+    <title>Graillance Catégorie Sondage</title>
+  </head>
+  <body>
+    <section>
+      <p>
+        Bonjour, ceci est un sondage web qui a été fait pour donner un outil
+        pratique d'indication des differents catégories des recettes. Il permet
+        de mettre à jour toutes les recettes d'une manière rapide et simple.
+      </p>
+    </section>
+    <section>
+      <img
+        id="thumpnail"
+        src="eine-perfekte-kaeseplatte-anrichten-so-gehts-kochen-aus-liebe-11.jpg"
+        alt="Photo du plat"
+      />
+      <h2>Une assiette avec un grand choix de fromage de toute la France!</h2>
+      <div>
+        <h3>Ingrédients</h3>
+        <div>
+          <img
+            class="ingredient-image"
+            src="183-Käsespätzle mit Röstzwiebeln_LR_v1-2.jpg"
+            width="10em"
+            height="10em"
+            alt="Ingrédient"
+          />
+          <p><b>Description de l'Ingrédient</b></p>
+        </div>
+        <div>
+          <img
+            class="ingredient-image"
+            src="183-Käsespätzle mit Röstzwiebeln_LR_v1-2.jpg"
+            alt="Ingrédient"
+          />
+          <p><b>Description de l'Ingrédient</b></p>
+        </div>
+      </div>
+      <div>
+        <h3>Filtres et d'autres charactéristiques</h3>
+        <div class="filter">
+          <p><b>Végétarien</b></p>
+          <p><b>Facile</b></p>
+          <p><b>Type</b></p>
+          <p><b>Durée</b></p>
+          <p><b>Seasonal</b></p>
+          <p><b>Sucrée</b></p>
+          <p><b>Rating</b></p>
+        </div>
+      </div>
+    </section>
+    <section>
+      <form action="">
+        <fieldset>
+          <legend>Veuillez donner votre avais du plat!</legend>
+          <label for="boisson"
+            ><input id="boisson" type="checkbox" />Est un boisson?</label
+          >
+          <label for="poisson"
+            ><input id="poisson" type="checkbox" />Contient du poisson?</label
+          >
+          <div class="slider">
+            <input
+              id="nationality"
+              type="range"
+              min="-1"
+              max="1"
+              step="0.2"
+              value="0"
+            />
+            <ul>
+              <li>International</li>
+              <li>Européen</li>
+              <li>Très francais</li>
+            </ul>
+          </div>
+          <div class="slider">
+            <input
+              id="season"
+              type="range"
+              min="-1"
+              max="1"
+              step="0.2"
+              value="0"
+            />
+            <ul>
+              <li>Hivernal</li>
+              <li>Pas de saison</li>
+              <li>frais</li>
+            </ul>
+          </div>
+          <div class="slider">
+            <input
+              id="sweet"
+              type="range"
+              min="-1"
+              max="1"
+              step="0.2"
+              value="0"
+            />
+            <ul>
+              <li>Sucré (dessert)</li>
+              <li>...</li>
+              <li>Relevé (Rôti)</li>
+            </ul>
+          </div>
+          <button type="submit">Sauvegarde!</button>
+          <button type="submit">Sauter!</button>
+        </fieldset>
+      </form>
+    </section>
+  </body>
+</html>
