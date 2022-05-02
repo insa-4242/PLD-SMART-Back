@@ -1,6 +1,7 @@
 const express = require("express");
 const routerMobile = express.Router();
 const mobileController = require("../Controller/mobileController");
+const userController = require("../Controller/userController");
 
 const { check } = require("express-validator");
 const mongoose = require("mongoose");
@@ -306,6 +307,23 @@ routerMobile.get(
           }
         }
         if (filter.difficulty) {
+          try {
+            filter.difficulty.forEach((value) => {
+              try {
+                if (isNumerica(filter.difficulty.min)) {
+                  if (typeof filter.difficulty.min === "string") {
+                    filter.difficulty.min = parseInt(filter.difficulty.min);
+                  }
+                } else {
+                  throw new Error("difficulty minimum must be an int");
+                }
+              } catch (err) {
+                throw new Error("difficulty minimum must be an int");
+              }
+            });
+          } catch (err) {
+            throw new Error("filter.difficulty must be an array of int");
+          }
           if (filter.difficulty.min) {
             try {
               if (isNumerica(filter.difficulty.min)) {
@@ -500,4 +518,29 @@ routerMobile.get(
   mobileController.searchByIngr
 );
 routerMobile.get("/recette/:id", mobileController.getRecettebyId);
+routerMobile.post(
+  "/user/signup",
+  [
+    check("userName").not().isEmpty(),
+    check("email").custom((val) => {
+      const re =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(val).toLowerCase());
+    }),
+    check("password").isLength({ min: 6 }),
+  ],
+  userController.signup
+);
+routerMobile.post(
+  "/user/login",
+  [
+    check("email").custom((val) => {
+      const re =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(val).toLowerCase());
+    }),
+    check("password").isLength({ min: 6 }),
+  ],
+  userController.login
+);
 module.exports = routerMobile;
