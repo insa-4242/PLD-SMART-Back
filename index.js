@@ -6,9 +6,12 @@ const HttpError = require("./Model/util/httpError");
 
 const routerRecette = require("./Routes/recetteRoutes");
 const routerMobile = require("./Routes/mobileRoutes");
+const routerUsers=require("./Routes/usersRoutes");
 
 const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+
+
 
 const app = express();
 
@@ -62,10 +65,11 @@ app.use(
 //Defines Routes
 app.use("/api/recette", routerRecette);
 app.use("/api/mobile", routerMobile);
+app.use("/api/users",routerUsers);
 
 //Créer une erreur si la requete n'est pas traitée
 app.use((req, res, next) => {
-  const error = new HttpError("Could note find this route", 404);
+  const error = new HttpError("Could not find this route", 404);
   throw error;
 });
 
