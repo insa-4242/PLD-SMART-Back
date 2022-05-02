@@ -1,4 +1,4 @@
-const HttpError = require("../../../../../ETIC/V2/V2_BACK/Model/util/httpErr");
+const HttpError = require("../Model/util/httpError");
 const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
