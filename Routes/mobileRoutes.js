@@ -2,7 +2,8 @@ const express = require("express");
 const routerMobile = express.Router();
 const mobileController = require("../Controller/mobileController");
 const userController = require("../Controller/userController");
-
+const recoController = require("../Controller/recommandationController");
+const checkAuth = require("../Middleware/Check-auth");
 const { check } = require("express-validator");
 const mongoose = require("mongoose");
 
@@ -522,6 +523,7 @@ routerMobile.post(
   "/user/signup",
   [
     check("userName").not().isEmpty(),
+
     check("email").custom((val) => {
       const re =
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -543,4 +545,10 @@ routerMobile.post(
   ],
   userController.login
 );
+
+routerMobile.use(checkAuth);
+
+routerMobile.get("/recommandation", recoController.getreco);
+routerMobile.post("/recommandation", recoController.postreco);
+
 module.exports = routerMobile;
