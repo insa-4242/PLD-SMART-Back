@@ -10,8 +10,12 @@ const sessionModel = new Schema({
   },
   listOfRecRecettes: [
     {
-      recette: mongoose.Types.ObjectId,
+      recette: {
+        type: mongoose.Types.ObjectId,
+        ref: "Recette",
+      },
       like: { type: Boolean },
+      _id: false,
     },
   ],
   date: { type: Date, required: true },

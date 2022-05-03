@@ -548,7 +548,15 @@ routerMobile.post(
 
 routerMobile.use(checkAuth);
 
-routerMobile.get("/recommandation", recoController.getreco);
-routerMobile.post("/recommandation", recoController.postreco);
+routerMobile.get(
+  "/recommandation",
+
+  recoController.getreco
+);
+routerMobile.post(
+  "/recommandation",
+  [check("type").isIn(["LIKE", "DISLIKE"]), check("recetteId").not().isEmpty()],
+  recoController.postreco
+);
 
 module.exports = routerMobile;
