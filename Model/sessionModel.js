@@ -15,6 +15,11 @@ const sessionModel = new Schema({
         type: mongoose.Types.ObjectId,
         ref: "Recette",
       },
+      status: {
+        type: String,
+        enum: ["UNSEEN", "SEEN"],
+        default: "UNSEEN",
+      },
       like: { type: Boolean },
       _id: false,
     },

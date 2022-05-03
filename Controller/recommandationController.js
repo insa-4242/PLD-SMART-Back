@@ -36,7 +36,7 @@ const getreco = async (req, res, next) => {
     return next(err);
   }
 
-  //SelectRecettes to
+  //SelectRecettes to add
   let recettes;
   try {
     recettes = await getGoodRecetteRandom(activeSession);
@@ -73,10 +73,7 @@ const postreco = async (req, res, next) => {
     console.log(err);
     return next(new HttpError("Error In token", 422));
   }
-  if (sessions.length === 0) {
-    console.log(err);
-    return next(new HttpError("Error in sessions", 422));
-  }
+
   // Find good session
   let activeSession;
   try {
@@ -87,10 +84,29 @@ const postreco = async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
+  const indexToChange = activeSession.listOfRecRecettes.findIndex((rec) => {
+    return rec.recette.toString() === req.body.recetteId;
+  });
 
-  console.log(activeSession);
+  if (indexToChange === -1) return next(new HttpError("Bad Id", 403));
 
-  res.status(201).json("uu");
+  activeSession.listOfRecRecettes[indexToChange] = {
+    recette: activeSession.listOfRecRecettes[indexToChange].recette,
+    like: req.body.type === "LIKE" ? true : false,
+    status: "SEEN",
+  };
+
+  const sess = await Mongoose.startSession();
+  try {
+    sess.startTransaction();
+    await activeSession.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    await sess.abortTransaction();
+    return next(new HttpError("Error Server", 500));
+  }
+
+  res.status(201).json({ message: "ok" });
 };
 /**
  * Add the recette to the Session
@@ -101,12 +117,9 @@ const addRecetteToSession = async (sessionToChange, recettes) => {
   let recetteToAdd = [];
   for (let index = 0; index < recettes.length; index++) {
     const recette = recettes[index];
-    console.log(recette);
     recetteToAdd.push({ recette: recette._id });
   }
-  console.log(recetteToAdd);
   sessionToChange.listOfRecRecettes.push(...recetteToAdd);
-  console.log(sessionToChange.listOfRecRecettes);
   const sess = await Mongoose.startSession();
   try {
     sess.startTransaction();
@@ -131,11 +144,12 @@ const addRecetteToSession = async (sessionToChange, recettes) => {
 const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   // Get All sessions
   let recettesIds = [];
+  console.log(session);
+
   for (let index = 0; index < session.listOfRecRecettes.length; index++) {
     const recette = session.listOfRecRecettes[index].recette;
     recettesIds.push(recette);
   }
-  console.log(recettesIds);
   let recettes;
   try {
     recettes = await recetteModel
@@ -224,7 +238,7 @@ const findGoodSessions = async (sessions, userId) => {
   // Add sessions if not exist
   if (!goodSession) {
     try {
-      await createSession(userId);
+      goodSession = await createSession(userId);
     } catch (err) {
       throw new HttpError("Error In server", 500);
     }
