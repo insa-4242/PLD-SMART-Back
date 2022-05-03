@@ -1,12 +1,9 @@
 const Mongoose = require("mongoose");
 const HttpError = require("../Model/util/httpError");
 
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const UserModel = require("../Model/userModel");
 const recetteModel = require("../Model/recetteModel");
-const userModel = require("../Model/userModel");
 const sessionModel = require("../Model/sessionModel");
 
 const getreco = async (req, res, next) => {
@@ -38,23 +35,36 @@ const getreco = async (req, res, next) => {
 
   //SelectRecettes to add
   let recettes;
+  let limitnumber = 4;
   try {
-    recettes = await getGoodRecetteRandom(activeSession);
+    limitnumber = parseInt(req.query.limitnumber);
+    if (!limitnumber || limitnumber > 10 || limitnumber <= 0) limitnumber = 4;
+  } catch (err) {
+    limitnumber = 4;
+  }
+
+  try {
+    recettes = await getGoodRecetteRandom(activeSession, limitnumber);
     //recettes = await getGoodRecette(activeSession);
   } catch (err) {
     return next(err);
   }
-  console.log(recettes);
 
-  //AddRecette to currentSession
-  try {
-    await addRecetteToSession(activeSession, recettes);
-    //recettes = await getGoodRecette(activeSession);
-  } catch (err) {
-    return next(err);
+  //Si l'algo ne renvoie aucune recette cela signifie que la session is full
+  //On recommence (création nouvelle session)
+  if (recettes.length === 0) {
+    await getreco(req, res, next);
+  } else {
+    //AddRecette to currentSession
+    try {
+      await addRecetteToSession(activeSession, recettes);
+      //recettes = await getGoodRecette(activeSession);
+    } catch (err) {
+      return next(err);
+    }
+
+    res.status(201).json({ recettes: recettes });
   }
-
-  res.status(201).json({ recettes: recettes });
 };
 
 const postreco = async (req, res, next) => {
@@ -128,10 +138,7 @@ const addRecetteToSession = async (sessionToChange, recettes) => {
   } catch (err) {
     await sess.abortTransaction();
     console.log(err);
-    const error = new HttpError(
-      "siuffp up failed, please try again later",
-      500
-    );
+
     throw new HttpError("Critical Error Send mail", 500);
   }
 };
@@ -180,8 +187,19 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
  * TODO
  * @param {*} session
  */
-const endSessionswithFull = async (session) => {
-  console.log("TODOENDSESS");
+const endSessionswithFull = async (fullSession) => {
+  console.log("FUUUL SESSION");
+  fullSession.isFull = true;
+  const sess = await Mongoose.startSession();
+  try {
+    sess.startTransaction();
+    await fullSession.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    await sess.abortTransaction();
+    console.log(err);
+    throw new HttpError("Server Errro", 500);
+  }
 };
 /**
  * Create a sessions for an user ID
