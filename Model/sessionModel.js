@@ -8,6 +8,7 @@ const sessionModel = new Schema({
     ref: "User",
     required: true,
   },
+  isFull: { type: Boolean },
   listOfRecRecettes: [
     {
       recette: {

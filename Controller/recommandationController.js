@@ -35,8 +35,8 @@ const getreco = async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
-  console.log(activeSession);
 
+  //SelectRecettes to
   let recettes;
   try {
     recettes = await getGoodRecetteRandom(activeSession);
@@ -44,27 +44,19 @@ const getreco = async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
+  console.log(recettes);
 
+  //AddRecette to currentSession
   try {
-    products = await recetteModel
-      .findById("6270d92b2f97557775cad60b")
-      .select(
-        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
-      );
-  } catch (err) {}
-
-  res.status(201).json({ Recettes: [products, products, products, products] });
-};
-const getGoodRecetteRandom = async (session) => {
-  // Get All sessions
-  let allUserSessions;
-  try {
-    allUserSessions = await recetteModel.find({ _id: req.userData.userId });
+    await addRecetteToSession(activeSession, recettes);
+    //recettes = await getGoodRecette(activeSession);
   } catch (err) {
-    console.log(err);
-    return next(new HttpError("Error In token", 422));
+    return next(err);
   }
+
+  res.status(201).json({ recettes: recettes });
 };
+
 const postreco = async (req, res, next) => {
   //Check userInput
   const errors = validationResult(req);
@@ -100,7 +92,86 @@ const postreco = async (req, res, next) => {
 
   res.status(201).json("uu");
 };
+/**
+ * Add the recette to the Session
+ * @param {Session} sessionToChange
+ * @param {Array[Recette]} recettes
+ */
+const addRecetteToSession = async (sessionToChange, recettes) => {
+  let recetteToAdd = [];
+  for (let index = 0; index < recettes.length; index++) {
+    const recette = recettes[index];
+    console.log(recette);
+    recetteToAdd.push({ recette: recette._id });
+  }
+  console.log(recetteToAdd);
+  sessionToChange.listOfRecRecettes.push(...recetteToAdd);
+  console.log(sessionToChange.listOfRecRecettes);
+  const sess = await Mongoose.startSession();
+  try {
+    sess.startTransaction();
+    await sessionToChange.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    await sess.abortTransaction();
+    console.log(err);
+    const error = new HttpError(
+      "siuffp up failed, please try again later",
+      500
+    );
+    throw new HttpError("Critical Error Send mail", 500);
+  }
+};
+/**
+ * Get the recette randomness
+ * @param {Session} session
+ * @param {Array} limitNumber
+ * @returns
+ */
+const getGoodRecetteRandom = async (session, limitNumber = 5) => {
+  // Get All sessions
+  let recettesIds = [];
+  for (let index = 0; index < session.listOfRecRecettes.length; index++) {
+    const recette = session.listOfRecRecettes[index].recette;
+    recettesIds.push(recette);
+  }
+  console.log(recettesIds);
+  let recettes;
+  try {
+    recettes = await recetteModel
+      .find({ _id: { $nin: recettesIds } })
+      .limit(limitNumber)
+      .select(
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+      );
+  } catch (err) {
+    console.log(err);
+    throw new HttpError("Error In servor", 500);
+  }
 
+  //if there is no recette we have getAll
+  if (recettes.length === 0) {
+    try {
+      await endSessionswithFull(session);
+    } catch (err) {
+      console.log(err);
+      throw new HttpError("Error In servor", 500);
+    }
+  }
+  return recettes;
+};
+/**
+ * TODO
+ * @param {*} session
+ */
+const endSessionswithFull = async (session) => {
+  console.log("TODOENDSESS");
+};
+/**
+ * Create a sessions for an user ID
+ * @param {String} userId
+ * @returns
+ */
 const createSession = async (userId) => {
   const newUserSession = new sessionModel({
     userId: userId,
@@ -121,8 +192,8 @@ const createSession = async (userId) => {
   user.sessions.push(newUserSession._id);
 
   //save all
+  const sess = await Mongoose.startSession();
   try {
-    const sess = await Mongoose.startSession();
     sess.startTransaction();
     await user.save({ session: sess });
     await newUserSession.save({ session: sess });
@@ -130,19 +201,21 @@ const createSession = async (userId) => {
   } catch (err) {
     await sess.abortTransaction();
     console.log(err);
-    const error = new HttpError(
-      "siuffp up failed, please try again later",
-      500
-    );
     throw new HttpError("Critical Error Send mail", 500);
   }
   return newUserSession;
 };
+/**
+ * Find the good sessions of user (create if doesnt exit)
+ * @param {Array[Sessions]} sessions
+ * @param {String} userId
+ * @returns
+ */
 const findGoodSessions = async (sessions, userId) => {
   let goodSession = null;
   for (let index = 0; index < sessions.length; index++) {
     const sess = sessions[index];
-    if (lessThanOneHourAgo(sess.date)) {
+    if (lessThanOneHourAgo(sess.date) && !sess.isFull) {
       goodSession = sess;
       break;
     }
@@ -158,7 +231,11 @@ const findGoodSessions = async (sessions, userId) => {
   }
   return goodSession;
 };
-
+/**
+ * Check if a date is less than 1H Ago
+ * @param {Date} date
+ * @returns Boolean
+ */
 const lessThanOneHourAgo = (date) => {
   const HOUR = 1000 * 60 * 60;
   const anHourAgo = Date.now() - HOUR;
