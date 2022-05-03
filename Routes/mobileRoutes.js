@@ -309,47 +309,26 @@ routerMobile.get(
         }
         if (filter.difficulty) {
           try {
-            filter.difficulty.forEach((value) => {
-              try {
-                if (isNumerica(filter.difficulty.min)) {
-                  if (typeof filter.difficulty.min === "string") {
-                    filter.difficulty.min = parseInt(filter.difficulty.min);
-                  }
-                } else {
-                  throw new Error("difficulty minimum must be an int");
+            filter.difficulty.forEach((dif, index) => {
+              if (isNumerica(dif)) {
+                if (typeof filter.difficulty.min === "string") {
+                  filter.difficulty[index] = parseInt(dif);
                 }
-              } catch (err) {
-                throw new Error("difficulty minimum must be an int");
+              } else {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
+              }
+              if (dif < 1 || dif > 5) {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
             });
           } catch (err) {
-            throw new Error("filter.difficulty must be an array of int");
-          }
-          if (filter.difficulty.min) {
-            try {
-              if (isNumerica(filter.difficulty.min)) {
-                if (typeof filter.difficulty.min === "string") {
-                  filter.difficulty.min = parseInt(filter.difficulty.min);
-                }
-              } else {
-                throw new Error("difficulty minimum must be an int");
-              }
-            } catch (err) {
-              throw new Error("difficulty minimum must be an int");
-            }
-          }
-          if (filter.difficulty.max) {
-            try {
-              if (isNumerica(filter.difficulty.max)) {
-                if (typeof filter.difficulty.max === "string") {
-                  filter.difficulty.max = parseInt(filter.difficulty.max);
-                }
-              } else {
-                throw new Error("difficulty maximum must be an int");
-              }
-            } catch (err) {
-              throw new Error("difficulty maximum must be an int");
-            }
+            throw new Error(
+              "difficulty minimum must be an array of int between 0 and 1"
+            );
           }
         }
         req.query.correctFilter = filter;

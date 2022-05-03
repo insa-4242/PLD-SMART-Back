@@ -98,25 +98,8 @@ const searchByName = async (req, res, next) => {
               },
             }),
           ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.min &&
-            !filter.difficulty.max && {
-              difficulty: { $gte: filter.difficulty.min },
-            }),
-          ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.max &&
-            !filter.difficulty.min && {
-              difficulty: { $lte: filter.difficulty.max },
-            }),
-          ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.max &&
-            filter.difficulty.min && {
-              difficulty: {
-                $lte: filter.difficulty.max,
-                $gte: filter.difficulty.min,
-              },
+            filter.difficulty && {
+              difficulty: { $in: filter.difficulty },
             }),
         },
         { score: { $meta: "textScore" } }
