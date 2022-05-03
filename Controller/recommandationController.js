@@ -144,7 +144,8 @@ const addRecetteToSession = async (sessionToChange, recettes) => {
 const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   // Get All sessions
   let recettesIds = [];
-  console.log(session);
+
+  let random = Math.floor(Math.random() * limitNumber);
 
   for (let index = 0; index < session.listOfRecRecettes.length; index++) {
     const recette = session.listOfRecRecettes[index].recette;
@@ -155,6 +156,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     recettes = await recetteModel
       .find({ _id: { $nin: recettesIds } })
       .limit(limitNumber)
+      .skip(random)
       .select(
         "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
       );
