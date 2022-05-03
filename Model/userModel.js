@@ -7,8 +7,7 @@ const userModel = new Schema({
   email: { type: String, required: true, unique: true },
   sessions: [
     {
-      type: mongoose.Types.ObjectId,
-      ref: "Session",
+      sessionID: { type: mongoose.Types.ObjectId, ref: "Session" },
     },
   ],
   password: { type: String, required: true, minlength: 6 },
