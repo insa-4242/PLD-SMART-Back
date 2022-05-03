@@ -429,31 +429,27 @@ routerMobile.get(
           }
         }
         if (filter.difficulty) {
-          if (filter.difficulty.min) {
-            try {
-              if (isNumerica(filter.difficulty.min)) {
+          try {
+            filter.difficulty.forEach((dif, index) => {
+              if (isNumerica(dif)) {
                 if (typeof filter.difficulty.min === "string") {
-                  filter.difficulty.min = parseInt(filter.difficulty.min);
+                  filter.difficulty[index] = parseInt(dif);
                 }
               } else {
-                throw new Error("difficulty minimum must be an int");
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
-            } catch (err) {
-              throw new Error("difficulty minimum must be an int");
-            }
-          }
-          if (filter.difficulty.max) {
-            try {
-              if (isNumerica(filter.difficulty.max)) {
-                if (typeof filter.difficulty.max === "string") {
-                  filter.difficulty.max = parseInt(filter.duration.max);
-                }
-              } else {
-                throw new Error("difficulty maximum must be an int");
+              if (dif < 1 || dif > 5) {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
-            } catch (err) {
-              throw new Error("difficulty maximum must be an int");
-            }
+            });
+          } catch (err) {
+            throw new Error(
+              "difficulty minimum must be an array of int between 0 and 1"
+            );
           }
         }
         if (filter.type) {
@@ -518,6 +514,7 @@ routerMobile.get(
   ],
   mobileController.searchByIngr
 );
+routerMobile.get("/recette/init", mobileController.initRecette);
 routerMobile.get("/recette/:id", mobileController.getRecettebyId);
 routerMobile.post(
   "/user/signup",

@@ -81,6 +81,7 @@ const signup = async (req, res, next) => {
     userId: newUser.id,
     email: newUser.email,
     token: token,
+    userName: newUser.userName,
   });
 };
 
@@ -132,6 +133,7 @@ const login = async (req, res, next) => {
     userId: existinguser.id,
     email: existinguser.email,
     token: token,
+    userName: existinguser.userName,
   });
 };
 

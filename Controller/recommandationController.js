@@ -23,7 +23,7 @@ const getreco = async (req, res, next) => {
       );
   } catch (err) {}
 
-  res.status(201).json({ Recettes: [products, products, products, products] });
+  res.status(201).json({ recettes: [products, products, products, products] });
 };
 
 const postreco = async (req, res, next) => {

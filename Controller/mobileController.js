@@ -125,6 +125,7 @@ const searchByName = async (req, res, next) => {
         "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
       )
       .sort({ score: { $meta: "textScore" } });
+
     console.log(filter);
     let ids = [];
     products.forEach((element) => {
@@ -180,25 +181,8 @@ const searchByName = async (req, res, next) => {
               },
             }),
           ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.min &&
-            !filter.difficulty.max && {
-              difficulty: { $gte: filter.difficulty.min },
-            }),
-          ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.max &&
-            !filter.difficulty.min && {
-              difficulty: { $lte: filter.difficulty.max },
-            }),
-          ...(filter &&
-            filter.difficulty &&
-            filter.difficulty.max &&
-            filter.difficulty.min && {
-              difficulty: {
-                $lte: filter.difficulty.max,
-                $gte: filter.difficulty.min,
-              },
+            filter.difficulty && {
+              difficulty: { $in: filter.difficulty },
             }),
           _id: { $nin: ids },
         })
@@ -337,25 +321,8 @@ const searchByIngr = async (req, res, next) => {
             },
           }),
         ...(filter &&
-          filter.difficulty &&
-          filter.difficulty.min &&
-          !filter.difficulty.max && {
-            difficulty: { $gte: filter.difficulty.min },
-          }),
-        ...(filter &&
-          filter.difficulty &&
-          filter.difficulty.max &&
-          !filter.difficulty.min && {
-            difficulty: { $lte: filter.difficulty.max },
-          }),
-        ...(filter &&
-          filter.difficulty &&
-          filter.difficulty.max &&
-          filter.difficulty.min && {
-            difficulty: {
-              $lte: filter.difficulty.max,
-              $gte: filter.difficulty.min,
-            },
+          filter.difficulty && {
+            difficulty: { $in: filter.difficulty },
           }),
       })
       .select(
@@ -389,6 +356,7 @@ const autocompleteIngr = async (req, res, next) => {
         },
         { score: { $meta: "textScore" } }
       )
+      .limit(3)
       .select("name")
       .sort({ score: { $meta: "textScore" } });
   } catch (err) {
@@ -411,6 +379,7 @@ const autocompleteIngr = async (req, res, next) => {
         name: { $regex: regex, $options: "i" },
         _id: { $nin: ids },
       })
+      .limit(3)
       .select("name");
   } catch (err) {
     console.log(err);
@@ -441,6 +410,7 @@ const autocompleteNameRecette = async (req, res, next) => {
         },
         { score: { $meta: "textScore" } }
       )
+      .limit(3)
       .select("title")
       .sort({ score: { $meta: "textScore" } });
   } catch (err) {
@@ -462,6 +432,7 @@ const autocompleteNameRecette = async (req, res, next) => {
         title: { $regex: regex, $options: "i" },
         _id: { $nin: ids },
       })
+      .limit(3)
       .select("title");
   } catch (err) {
     console.log(err);
@@ -474,114 +445,21 @@ const autocompleteNameRecette = async (req, res, next) => {
   });
 };
 
-/**
- * Take a list of Ingr and return a list of Recette
- * useful: the Schema ingredientModel holds now a Array of Recepies
- *
- * @param {[Ingredient]} listofOfIngr List of ingredients
- * @returns {[Recette]} List of recepies which contain at least one of these ingredients
- */
-const oskarFunction = async (listofOfIngr, correctFilter) => {
-  //console.log(listofOfIngr);
+const initRecette = async (req, res, next) => {
+  let existingRecette;
+  try {
+    existingRecette = await recetteModel.find({}).limit(50);
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError("Ooops An error Occured", 500);
+    return next(error);
+  }
 
-  //put all recepie objectID into one array
-  let recepieIds = [];
-  listofOfIngr.forEach((i) => {
-    recepieIds = recepieIds.concat(i.idsRecette);
+  res.status(201).json({
+    recettes: existingRecette.map((rec) => rec.toObject({ getters: true })),
   });
-
-  //console.log("recepieIds.length: \n", recepieIds.length);
-  //call algo function to retain relevant recepie IDs
-  //prefere recepies that use as many ingredients as possible so initially as given
-  //if those are less then 3, also accept recepies which use less.
-  let minIngredUtiParRecette = listofOfIngr.length;
-  let recepieIdsBackup = recepieIds;
-  do {
-    recepieIds = algo.sortByOcccurrence(
-      recepieIdsBackup,
-      minIngredUtiParRecette
-    );
-    minIngredUtiParRecette--;
-  } while (recepieIds.length < 3 && minIngredUtiParRecette > 1);
-  //console.log("recepieIds, after sortByOccurrence: \n", recepieIds.length);
-  //find the related recepies from the database and apply the filter to it
-  //https://newbedev.com/mongodb-mongoose-findmany-find-all-documents-with-ids-listed-in-array
-  let foundRecepies = [];
-  const filter = correctFilter;
-  foundRecepies = await recetteModel
-    .find({
-      _id: { $in: recepieIds },
-      ...(filter &&
-        filter.type &&
-        filter.type.length !== 0 && {
-          type: { $in: filter.type },
-        }),
-      ...(filter &&
-        filter.isVegetarian && {
-          isVegetarian: true,
-        }),
-      ...(filter &&
-        filter.isVegan && {
-          isVegan: true,
-        }),
-      ...(filter &&
-        filter.isLactoseFree && {
-          isLactoseFree: true,
-        }),
-      ...(filter &&
-        filter.isGlutenFree && {
-          isGlutenFree: true,
-        }),
-      ...(filter &&
-        filter.duration &&
-        filter.duration.min &&
-        !filter.duration.max && {
-          totalTime: { $gte: filter.duration.min },
-        }),
-      ...(filter &&
-        filter.duration &&
-        filter.duration.max &&
-        !filter.duration.min && {
-          totalTime: { $lte: filter.duration.max },
-        }),
-      ...(filter &&
-        filter.duration &&
-        filter.duration.max &&
-        filter.duration.min && {
-          totalTime: {
-            $lte: filter.duration.max,
-            $gte: filter.duration.min,
-          },
-        }),
-      ...(filter &&
-        filter.difficulty &&
-        filter.difficulty.min &&
-        !filter.difficulty.max && {
-          difficulty: { $gte: filter.difficulty.min },
-        }),
-      ...(filter &&
-        filter.difficulty &&
-        filter.difficulty.max &&
-        !filter.difficulty.min && {
-          difficulty: { $lte: filter.difficulty.max },
-        }),
-      ...(filter &&
-        filter.difficulty &&
-        filter.difficulty.max &&
-        filter.difficulty.min && {
-          difficulty: {
-            $lte: filter.difficulty.max,
-            $gte: filter.difficulty.min,
-          },
-        }),
-    })
-    .select(
-      "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
-    );
-
-  return foundRecepies;
 };
-
+exports.initRecette = initRecette;
 exports.searchByIngr = searchByIngr;
 exports.getRecettebyId = getRecettebyId;
 exports.searchByName = searchByName;
