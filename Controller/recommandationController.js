@@ -99,11 +99,21 @@ const postreco = async (req, res, next) => {
   });
 
   if (indexToChange === -1) return next(new HttpError("Bad Id", 403));
-
+  //start with the time field and calculate the mean of the liked recepies and the mean of the disliked recepies.
   activeSession.listOfRecRecettes[indexToChange] = {
     recette: activeSession.listOfRecRecettes[indexToChange].recette,
     like: req.body.type === "LIKE" ? true : false,
     status: "SEEN",
+  };
+
+  let updateteddRecetteID =
+    activeSession.listOfRecRecettes[indexToChange].recette;
+  const updatedrecette = await recetteModel.findById(updateteddRecetteID);
+  activeSession = {
+    liked: req.body.type === "LIKE" ? liked + 1 : liked,
+    seenNotLiked: req.body.type !== "LIKE" ? seenNotLiked + 1 : seenNotLiked,
+    vegeLPlus: updatedrecette.isVegetarian ? vegeLPlus + 1 : vegeLPlus,
+    sweetLPlus: updatedrecette.isSweet ? sweetLPlus + 1 : sweetLPlus,
   };
 
   const sess = await Mongoose.startSession();
@@ -152,6 +162,33 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   // Get All sessions
   let recettesIds = [];
 
+  /**  
+ * user based or content based -> decided for contetnt based beacouse attirbutes of recepies are well defined and we dont have users
+ * 
+
+ */
+
+  /**for the first intelligent recommendation algorithm i want tto take into account: time, type, sweetness
+   * difficulty is also not evident and can't really be used( is impractical)
+   * sweet [0;1] if >= 0.5 then the user preferes sweeter recepies
+   *
+   * time [0;30],[30;70];[70;150];[150;+]
+   * we can calculate simply the median but this would be to much influenced by one 250 min recepie.
+   * or we select the most liked categorie but recommend also recepies which have +- 15 min
+   *
+   * but I don't think the user will be as ratioanal to decide why the time, or maybe yes.
+   * we could leave it out or if the dfference of cooking time between liked recepies and notliked recepies is big enough we count it in
+   *
+   * we have different types
+   * accompagnement, amuse-geule, boisson, confisserie, dessert, entrée, plat rincipale, sauce
+   * the difference between amuse-guele, accompagnement, entrée, plat principale is not evident
+   * i will summarize confisserie, dessert into the type sweet_dish
+   * i will summarize accompagnement, Amuse-guele and entrée
+   * finally i will only cetegorize into boisson, sweet_dish, rest, and leave out sauce
+   *
+   *
+   **/
+
   let random = Math.floor(Math.random() * limitNumber);
 
   for (let index = 0; index < session.listOfRecRecettes.length; index++) {
@@ -159,6 +196,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     recettesIds.push(recette);
   }
   let recettes;
+  //here we load a custom filter which is a result from our model. The filter will be updated on every response from the client, so in the post request
   try {
     recettes = await recetteModel
       .find({ _id: { $nin: recettesIds } })
@@ -211,6 +249,10 @@ const createSession = async (userId) => {
     userId: userId,
     listOfRecRecettes: [],
     date: Date.now(),
+    liked: 0,
+    seenNotLiked: 0,
+    vegeLPlus: 0,
+    sweetLPlus: 0,
   });
 
   //Modify user

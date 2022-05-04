@@ -25,6 +25,10 @@ const sessionModel = new Schema({
     },
   ],
   date: { type: Date, required: true },
+  liked: { type: Number }, //l+
+  seenNotLiked: { type: Number }, //l-
+  vegeLPlus: { type: Number },
+  sweetLPlus: { type: Number },
 });
 
 module.exports = mongoose.model("Session", sessionModel);
