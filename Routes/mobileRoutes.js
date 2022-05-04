@@ -493,7 +493,133 @@ routerMobile.get(
   ],
   mobileController.searchByIngr
 );
-routerMobile.get("/recette/init", mobileController.initRecette);
+routerMobile.get(
+  "/recette/init",
+  [
+    check("filter")
+      .optional()
+      .custom((value, { req }) => {
+        let filter;
+        try {
+          filter = JSON.parse(value);
+        } catch (err) {
+          console.log(err);
+          throw new Error("Not a good Json file in filter");
+        }
+        if (filter.duration) {
+          if (filter.duration.min) {
+            try {
+              if (isNumerica(filter.duration.min)) {
+                if (typeof filter.duration.min === "string") {
+                  filter.duration.min = parseInt(filter.duration.min);
+                }
+              } else {
+                throw new Error("duration minimum must be an int");
+              }
+            } catch (err) {
+              throw new Error("duration minimum must be an int");
+            }
+          }
+          if (filter.duration.max) {
+            try {
+              if (isNumerica(filter.duration.max)) {
+                if (typeof filter.duration.max === "string") {
+                  filter.duration.max = parseInt(filter.duration.max);
+                }
+              } else {
+                throw new Error("duration maximum must be an int");
+              }
+            } catch (err) {
+              throw new Error("duration maximum must be an int");
+            }
+          }
+        }
+        if (filter.difficulty) {
+          try {
+            filter.difficulty.forEach((dif, index) => {
+              if (isNumerica(dif)) {
+                if (typeof filter.difficulty.min === "string") {
+                  filter.difficulty[index] = parseInt(dif);
+                }
+              } else {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
+              }
+              if (dif < 1 || dif > 5) {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
+              }
+            });
+          } catch (err) {
+            throw new Error(
+              "difficulty minimum must be an array of int between 0 and 1"
+            );
+          }
+        }
+        if (filter.type) {
+          try {
+            filter.type.forEach((typ) => {
+              if (typeof typ !== "string") {
+                throw new Error("filter.type must be an array of string");
+              }
+            });
+          } catch (err) {
+            throw new Error("filter.type must be an array of string");
+          }
+        }
+        if (filter.regime) {
+          try {
+            let isVegetarian;
+            let isVegan;
+            let isLactoseFree;
+            let isGlutenFree;
+            filter.regime.forEach((typ) => {
+              if (typeof typ !== "string") {
+                throw new Error(
+                  "filter.regime must be an array of 'gluttenfree','vegetarian','vegan','lactosefree'"
+                );
+              } else {
+                switch (typ) {
+                  case "gluttenfree":
+                    isGlutenFree = true;
+                    break;
+                  case "vegan":
+                    isVegan = true;
+                    break;
+                  case "lactosefree":
+                    isLactoseFree = true;
+                    break;
+                  case "vegetarian":
+                    isVegetarian = true;
+                    break;
+                  default:
+                    throw new Error(
+                      "filter.regime must be an array of 'gluttenfree','vegetarian','vegan','lactosefree'"
+                    );
+                    break;
+                }
+              }
+            });
+            filter.isVegetarian = isVegetarian;
+            filter.isLactoseFree = isLactoseFree;
+            filter.isVegan = isVegan;
+            filter.isGlutenFree = isGlutenFree;
+          } catch (err) {
+            console.log(err);
+            throw new Error(
+              "filter.regime must be an array of 'gluttenfree','vegetarian','vegan','lactosefree'"
+            );
+          }
+        }
+
+        req.query.correctFilter = filter;
+        return true;
+      }),
+  ],
+  mobileController.initRecette
+);
 routerMobile.get("/recette/:id", mobileController.getRecettebyId);
 routerMobile.post(
   "/user/signup",
