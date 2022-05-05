@@ -197,23 +197,23 @@ const _getGoodRecetteRandom = async (session, limitNumber = 5) => {
 
 /**
  * user based or content based -> decided for contetnt based beacouse attirbutes of recepies are well defined and we dont have users
- * for the first intelligent recommendation algorithm i want tto take into account: time, type, sweetness
+ * for the first intelligent recommendation algorithm i want tto take into account: time, vegetarian, sweetness
  * difficulty is also not evident and can't really be used( is impractical)
- * sweet [0;1] if >= 0.5 then the user preferes sweeter recepies
+ * sweet [-1;1] if > 0.3 then the user preferes sweeter recepies
  *
  * time [0;30],[30;70];[70;150];[150;+]
  * we can calculate simply the median but this would be to much influenced by one 250 min recepie.
  * or we select the most liked categorie but recommend also recepies which have +- 15 min
- *
+ * the current approch is to use the median +- the derivation, no timewindows
  * but I don't think the user will be as ratioanal to decide why the time, or maybe yes.
- * we could leave it out or if the dfference of cooking time between liked recepies and notliked recepies is big enough we count it in
+ * we could leave it out or if the difference of cooking time between liked recepies and notliked recepies is big enough we count it in
  *
  * we have different types
  * accompagnement, amuse-geule, boisson, confisserie, dessert, entrée, plat rincipale, sauce
  * the difference between amuse-guele, accompagnement, entrée, plat principale is not evident
  * i will summarize confisserie, dessert into the type sweet_dish
  * i will summarize accompagnement, Amuse-guele and entrée
- * finally i will only cetegorize into boisson, sweet_dish, rest, and leave out sauce
+ * finally i will only cetegorize into boisson, sweet_dish, rest, and leave out sauce, but not in this version
  * @param {*} session
  * @param {*} limitNumber
  */
@@ -223,19 +223,20 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   recettesIds = [];
   for (let index = 0; index < session.listOfRecRecettes.length; index++) {
     const recette = session.listOfRecRecettes[index].recette;
-    recettesIds.push(recette._id);
-    if (session.listOfRecRecettes[index].status !== "SEEN") {
+    recettesIds.push(recette._id); //store all recepies which have ever been receommended in this sessin to not recommend them twice: findbyID( notin recettesIDs)
+    if (session.listOfRecRecettes[index].status == "SEEN") {
+      //take for the recommendation only the recepies into account, which the user has at leas seen
       sessionCopy.push(session.listOfRecRecettes[index]);
     }
   }
   //console.log("session Copy before populating:\n", sessionCopy);
-  // populate the recette in the mongoose model
+  // populate the recette in the mongoose model because in the session Model only the ObjectIDs from the recepies are saved
   for (let i = 0; i < sessionCopy.length; i++) {
     try {
       sessionCopy[i].recette = await recetteModel
         .findById(sessionCopy[i].recette)
         .select(
-          "_id, title , type , isVegetarian , isSweet, totalTime " //only data which is reevant for the next recommendation
+          "_id, title , type , isVegetarian , isSweet, totalTime " //only data which is relevant for the next recommendation
         );
     } catch (err) {
       console.log(err);
@@ -251,6 +252,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   let amountVege = 0;
   let recepiesCookingTime = [];
   for (let i = 0; i < sessionCopy.length; i++) {
+    //only for analysing and counting the recepies that the user has seen and maybe liked.
     if (sessionCopy[i].recette.isSweet) {
       amountSweet++;
     }
@@ -262,7 +264,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     if (sessionCopy[i].liked) {
       amountLiked++;
       if (!isNaN(sessionCopy[i].totalTime)) {
-        recepiesCookingTime.push(sessionCopy[i].totalTime);
+        recepiesCookingTime.push(sessionCopy[i].totalTime); //only take recepy time takes into account of liked recepies.
       }
     }
     if (sessionCopy[i].liked && sessionCopy[i].recette.isSweet) {
@@ -273,28 +275,29 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     }
   }
   //Time
-  console.log("Recepes Cooking time[]", recepiesCookingTime);
   recepiesCookingTime = recepiesCookingTime.filter(function (value) {
+    // remove all 0 cooking Time values from the arrays.
     return value > 0;
   });
-  let mean = algo.calculateMean(recepiesCookingTime);
+  let mean = algo.calculateMean(recepiesCookingTime); //the median would be an relevant option too, to better handly one recepie which takes super long
   let derivation = algo.calculateSD(recepiesCookingTime);
-  let meanIsNull = true;
+  let meanIsNull = true; //set checkattribute for the mongose query
   mean != 0 ? (meanIsNull = false) : (meanIsNull = true);
-  console.log("Mean", mean);
-  console.log("derivation", derivation);
+  /* console.log("Mean", mean);
+  console.log("derivation", derivation); */
   //sweet
   let amountDisliked = sessionCopy.length - amountLiked;
   let probabilitySweet =
     amountSweetInLiked / amountLiked -
-    (-1 * (amountSweet - amountSweetInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies
+    (-1 * (amountSweet - amountSweetInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies, witchout *-1 would be biased towards sweetness
   let preferesSweet = false;
   let filterSweetness = false;
   if (Math.abs(probabilitySweet) > 0.3) {
+    //0.3 was randomly chosen: [-1; 1]
     filterSweetness = true;
   }
   probabilitySweet > 0 ? (preferesSweet = true) : (preferesSweet = false);
-  //Vege
+  //same think for the vegeatrian variable
   let probabilityVege =
     amountVegeInLiked / amountLiked -
     (-1 * (amountVege - amountVegeInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies
@@ -303,7 +306,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   if (Math.abs(probabilityVege) > 0.3) {
     filterVege = true;
   }
-  probabilityVege > 0 ? (preferesVege = true) : (preferesVege = false);
+  probabilityVege > 0 ? (preferesVege = true) : (preferesVege = false); //set checkattribute for the query
   let recettes = [];
   try {
     recettes = await recetteModel
@@ -312,8 +315,8 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
           {
             _id: { $nin: recettesIds },
             $cond: {
-              if: { filterSweetness },
-              then: { isSweet: { $eq: preferesSweet } },
+              if: { filterSweetness }, //true or false, checkvariable
+              then: { isSweet: { $eq: preferesSweet } }, //preferesSweet true or false, then only isSweet: true/false recepies will be selected
               else: {},
             },
             $cond: {
@@ -322,9 +325,10 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
               else: {},
             },
             $cond: {
-              if: { meanIsNull },
-              then: {},
+              if: { meanIsNull }, //so there is no data to base the recommendation on
+              then: {}, //no data, do nothing
               else: {
+                //recommend recepies which are [derivation-mean; derivation+mean]
                 $and: [
                   { totalTime: { $lte: mean + derivation } },
                   { totalTime: { $gte: mean - derivation } },
@@ -343,7 +347,9 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     console.log(err);
     throw new HttpError("Error In servor ,load reccomended recepies", 500);
   }
-  if (recettes.length < limitNumber) {
+  //if the tinder algo just started it can occure that no recepies were found. Then get the randomly
+  if (recettes.length < limitNumber - 1) {
+    console.log("Get Recepies randomly");
     try {
       recettes = await recetteModel
         .find({ _id: { $nin: recettesIds } })
