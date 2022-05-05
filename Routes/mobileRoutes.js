@@ -635,6 +635,7 @@ routerMobile.post(
   ],
   userController.signup
 );
+routerMobile.post("/user/signinFacebook",userController.signinFacebook);
 routerMobile.post(
   "/user/login",
   [

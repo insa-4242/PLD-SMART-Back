@@ -6,6 +6,69 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const UserModel = require("../Model/userModel");
 
+const signinFacebook = async (req, res, next) => {
+  console.log("Call login");
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors);
+    return next(new HttpError("Error input", 422));
+  }
+  const {name, email, fbToken } = req.body;
+  let existinguser;
+  try {
+    existinguser = await UserModel.findOne({ email: email });
+  } catch (err) {
+    const error = new HttpError("Logging failed, please try again later", 500);
+    return next(error);
+  }
+  if (!existinguser) {
+    existinguser=new UserModel({
+      userName: name,
+      email: email,
+      password: fbToken,
+      sessions: [],
+    });
+  }
+  const isValidPassword = fbToken===existinguser.fbToken;
+  if (!isValidPassword) {
+    try {
+      const sess = await Mongoose.startSession();
+      sess.startTransaction();
+      await existinguser.save({ password:fbToken,session: sess });
+      await sess.commitTransaction();
+    } catch (err) {
+      await sess.abortTransaction();
+      console.log(err);
+      const error = new HttpError(
+        "siuffp up failed, please try again later",
+        500
+      );
+      return next(error);
+    }
+  }
+  //existinguser=await UserModel.findOne({ email: email });
+  console.log("existinguser",existinguser);
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: existinguser.id, email: existinguser.email },
+      process.env.JWT_KEY,
+      { expiresIn: "1y" }
+    );
+  } catch (err) {
+    console.log(err);
+    const error = new HttpError("log up failed, please try again later", 500);
+    return next(error);
+  }
+
+  res.status(201).json({
+    userId: existinguser.id,
+    email: existinguser.email,
+    token: token,
+    userName: existinguser.userName,
+  });
+};
+
 const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -139,3 +202,4 @@ const login = async (req, res, next) => {
 
 exports.login = login;
 exports.signup = signup;
+exports.signinFacebook = signinFacebook;
