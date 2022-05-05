@@ -430,8 +430,61 @@ const autocompleteNameRecette = async (req, res, next) => {
 
 const initRecette = async (req, res, next) => {
   let existingRecette;
+  const filter = req.query.correctFilter;
   try {
-    existingRecette = await recetteModel.find({}).limit(50);
+    existingRecette = await recetteModel
+      .find({
+        ...(filter &&
+          filter.type &&
+          filter.type.length !== 0 && {
+            type: { $in: filter.type },
+          }),
+        ...(filter &&
+          filter.isVegetarian && {
+            isVegetarian: true,
+          }),
+        ...(filter &&
+          filter.isVegan && {
+            isVegan: true,
+          }),
+        ...(filter &&
+          filter.isLactoseFree && {
+            isLactoseFree: true,
+          }),
+        ...(filter &&
+          filter.isGlutenFree && {
+            isGlutenFree: true,
+          }),
+        ...(filter &&
+          filter.duration &&
+          filter.duration.min &&
+          !filter.duration.max && {
+            totalTime: { $gte: filter.duration.min },
+          }),
+        ...(filter &&
+          filter.duration &&
+          filter.duration.max &&
+          !filter.duration.min && {
+            totalTime: { $lte: filter.duration.max },
+          }),
+        ...(filter &&
+          filter.duration &&
+          filter.duration.max &&
+          filter.duration.min && {
+            totalTime: {
+              $lte: filter.duration.max,
+              $gte: filter.duration.min,
+            },
+          }),
+        ...(filter &&
+          filter.difficulty && {
+            difficulty: { $in: filter.difficulty },
+          }),
+      })
+      .limit(50)
+      .select(
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+      );
   } catch (err) {
     console.log(err);
     const error = new HttpError("Ooops An error Occured", 500);
