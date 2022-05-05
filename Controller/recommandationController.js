@@ -289,7 +289,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   let amountDisliked = sessionCopy.length - amountLiked;
   let probabilitySweet =
     amountSweetInLiked / amountLiked -
-    (-1 * (amountSweet - amountSweetInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies, witchout *-1 would be biased towards sweetness
+    (amountSweet - amountSweetInLiked) / amountDisliked; //if > 0 then user preferes sweet recepies, witchout *-1 would be biased towards sweetness
   let preferesSweet = false;
   let filterSweetness = false;
   if (Math.abs(probabilitySweet) > 0.3) {
@@ -300,7 +300,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
   //same think for the vegeatrian variable
   let probabilityVege =
     amountVegeInLiked / amountLiked -
-    (-1 * (amountVege - amountVegeInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies
+    (amountVege - amountVegeInLiked) / amountDisliked; //if > 0 then user preferes sweet recepies
   let preferesVege = false;
   let filterVege = false;
   if (Math.abs(probabilityVege) > 0.3) {
