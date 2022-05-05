@@ -235,7 +235,7 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
       sessionCopy[i].recette = await recetteModel
         .findById(sessionCopy[i].recette)
         .select(
-          "_id, title , type , isVegetarian , isSweet" //only data which is reevant for the next recommendation
+          "_id, title , type , isVegetarian , isSweet, totalTime " //only data which is reevant for the next recommendation
         );
     } catch (err) {
       console.log(err);
@@ -257,11 +257,13 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     if (sessionCopy[i].recette.isVege) {
       amountVege++;
     }
+    /* console.log(!isNaN(sessionCopy[i].totalTime));
+    console.log(sessionCopy[i].totalTime); */
     if (sessionCopy[i].liked) {
       amountLiked++;
-      /* if (!isNaN(sessionCopy[i].totalTime)) {
+      if (!isNaN(sessionCopy[i].totalTime)) {
         recepiesCookingTime.push(sessionCopy[i].totalTime);
-      } */
+      }
     }
     if (sessionCopy[i].liked && sessionCopy[i].recette.isSweet) {
       amountSweetInLiked++;
@@ -271,11 +273,16 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     }
   }
   //Time
-  /* recepiesCookingTime = recepiesCookingTime.filter(function (value) {
+  console.log("Recepes Cooking time[]", recepiesCookingTime);
+  recepiesCookingTime = recepiesCookingTime.filter(function (value) {
     return value > 0;
   });
   let mean = algo.calculateMean(recepiesCookingTime);
-  let derivation = algo.calculateSD(recepiesCookingTime); */
+  let derivation = algo.calculateSD(recepiesCookingTime);
+  let meanIsNull = true;
+  mean != 0 ? (meanIsNull = false) : (meanIsNull = true);
+  console.log("Mean", mean);
+  console.log("derivation", derivation);
   //sweet
   let amountDisliked = sessionCopy.length - amountLiked;
   let probabilitySweet =
@@ -304,7 +311,6 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
         $and: [
           {
             _id: { $nin: recettesIds },
-            //$or: [{ filterSweetness, isSweet: { $eq: preferesSweet } }],
             $cond: {
               if: { filterSweetness },
               then: { isSweet: { $eq: preferesSweet } },
@@ -315,21 +321,27 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
               then: { isVegetarian: { $eq: preferesVege } },
               else: {},
             },
-            /* $and: [
-              { totalTime: { $lte: mean + derivation } },
-              { totalTime: { $gte: mean - derivation } },
-            ], */
+            $cond: {
+              if: { meanIsNull },
+              then: {},
+              else: {
+                $and: [
+                  { totalTime: { $lte: mean + derivation } },
+                  { totalTime: { $gte: mean - derivation } },
+                ],
+              },
+            },
           },
         ],
       })
       .limit(limitNumber)
       .select(
-        //"_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
-        "_id, imagesUrls , isVegetarian , isSweet "
+        "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+        //"_id, imagesUrls , isVegetarian , isSweet , totalTime "
       );
   } catch (err) {
     console.log(err);
-    throw new HttpError("Error In servor", 500);
+    throw new HttpError("Error In servor ,load reccomended recepies", 500);
   }
   if (recettes.length < limitNumber) {
     try {

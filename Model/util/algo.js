@@ -62,8 +62,10 @@ module.exports = { sortByOcccurrence };
 module.exports = { sortByOcccurrenceNested };
 // Calculate the average of all the numbers
 function calculateMean(values) {
-  const mean =
-    values.reduce((sum, current) => sum + current, 0) / values.length;
+  if (values.length == 0) {
+    return 0;
+  }
+  const mean = values.reduce((sum, current) => sum + current) / values.length;
   return mean;
 }
 
