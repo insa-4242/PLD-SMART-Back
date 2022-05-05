@@ -58,8 +58,6 @@ function sortByOcccurrenceNested(array, lowerBound = 1) {
   //concatArray = [1,2,3,1,2,3,4,2,3,4,5];
   return sortByOcccurrence(concatArray, lowerBound);
 }
-module.exports = { sortByOcccurrence };
-module.exports = { sortByOcccurrenceNested };
 // Calculate the average of all the numbers
 function calculateMean(values) {
   if (values.length == 0) {
@@ -86,11 +84,8 @@ function calculateSD(variance) {
 }
 module.exports = {
   sortByOcccurrence,
+  sortByOcccurrenceNested,
   calculateMean,
   calculateVariance,
   calculateSD,
 };
-/* module.exports = { calculateMean };
-module.exports = { calculateVariance };
-module.exports = { calculateSD };
- */
