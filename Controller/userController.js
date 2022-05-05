@@ -13,7 +13,7 @@ const signinFacebook = async (req, res, next) => {
     console.log(errors);
     return next(new HttpError("Error input", 422));
   }
-  const {name, email, fbToken } = req.body;
+  const {userName, email, fbToken } = req.body;
   let existinguser;
   try {
     existinguser = await UserModel.findOne({ email: email });
@@ -23,7 +23,7 @@ const signinFacebook = async (req, res, next) => {
   }
   if (!existinguser) {
     existinguser=new UserModel({
-      userName: name,
+      userName: userName,
       email: email,
       password: fbToken,
       sessions: [],
