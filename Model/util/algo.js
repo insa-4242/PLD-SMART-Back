@@ -42,5 +42,35 @@ function sortByOcccurrence(array, lowerBound = 1) {
   //console.log("sortedArray: ", sortedArray);
   return sortedArray;
 }
+// Calculate the average of all the numbers
+function calculateMean(values) {
+  const mean =
+    values.reduce((sum, current) => sum + current, 0) / values.length;
+  return mean;
+}
 
-module.exports = { sortByOcccurrence };
+// Calculate variance
+function calculateVariance(values) {
+  const average = calculateMean(values);
+  const squareDiffs = values.map((value) => {
+    const diff = value - average;
+    return diff * diff;
+  });
+  const variance = calculateMean(squareDiffs);
+  return variance;
+}
+
+// Calculate stand deviation
+function calculateSD(variance) {
+  return Math.sqrt(variance);
+}
+module.exports = {
+  sortByOcccurrence,
+  calculateMean,
+  calculateVariance,
+  calculateSD,
+};
+/* module.exports = { calculateMean };
+module.exports = { calculateVariance };
+module.exports = { calculateSD };
+ */

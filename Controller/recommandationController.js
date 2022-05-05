@@ -5,6 +5,7 @@ const { validationResult } = require("express-validator");
 const UserModel = require("../Model/userModel");
 const recetteModel = require("../Model/recetteModel");
 const sessionModel = require("../Model/sessionModel");
+const algo = require("../Model/util/algo.js");
 
 const getreco = async (req, res, next) => {
   const errors = validationResult(req);
@@ -158,36 +159,9 @@ const addRecetteToSession = async (sessionToChange, recettes) => {
  * @param {Array} limitNumber
  * @returns
  */
-const getGoodRecetteRandom = async (session, limitNumber = 5) => {
+const _getGoodRecetteRandom = async (session, limitNumber = 5) => {
   // Get All sessions
   let recettesIds = [];
-
-  /**  
- * user based or content based -> decided for contetnt based beacouse attirbutes of recepies are well defined and we dont have users
- * 
-
- */
-
-  /**for the first intelligent recommendation algorithm i want tto take into account: time, type, sweetness
-   * difficulty is also not evident and can't really be used( is impractical)
-   * sweet [0;1] if >= 0.5 then the user preferes sweeter recepies
-   *
-   * time [0;30],[30;70];[70;150];[150;+]
-   * we can calculate simply the median but this would be to much influenced by one 250 min recepie.
-   * or we select the most liked categorie but recommend also recepies which have +- 15 min
-   *
-   * but I don't think the user will be as ratioanal to decide why the time, or maybe yes.
-   * we could leave it out or if the dfference of cooking time between liked recepies and notliked recepies is big enough we count it in
-   *
-   * we have different types
-   * accompagnement, amuse-geule, boisson, confisserie, dessert, entrée, plat rincipale, sauce
-   * the difference between amuse-guele, accompagnement, entrée, plat principale is not evident
-   * i will summarize confisserie, dessert into the type sweet_dish
-   * i will summarize accompagnement, Amuse-guele and entrée
-   * finally i will only cetegorize into boisson, sweet_dish, rest, and leave out sauce
-   *
-   *
-   **/
 
   let random = Math.floor(Math.random() * limitNumber);
 
@@ -196,7 +170,6 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     recettesIds.push(recette);
   }
   let recettes;
-  //here we load a custom filter which is a result from our model. The filter will be updated on every response from the client, so in the post request
   try {
     recettes = await recetteModel
       .find({ _id: { $nin: recettesIds } })
@@ -220,6 +193,170 @@ const getGoodRecetteRandom = async (session, limitNumber = 5) => {
     }
   }
   return recettes;
+};
+
+/**
+ * user based or content based -> decided for contetnt based beacouse attirbutes of recepies are well defined and we dont have users
+ * for the first intelligent recommendation algorithm i want tto take into account: time, type, sweetness
+ * difficulty is also not evident and can't really be used( is impractical)
+ * sweet [0;1] if >= 0.5 then the user preferes sweeter recepies
+ *
+ * time [0;30],[30;70];[70;150];[150;+]
+ * we can calculate simply the median but this would be to much influenced by one 250 min recepie.
+ * or we select the most liked categorie but recommend also recepies which have +- 15 min
+ *
+ * but I don't think the user will be as ratioanal to decide why the time, or maybe yes.
+ * we could leave it out or if the dfference of cooking time between liked recepies and notliked recepies is big enough we count it in
+ *
+ * we have different types
+ * accompagnement, amuse-geule, boisson, confisserie, dessert, entrée, plat rincipale, sauce
+ * the difference between amuse-guele, accompagnement, entrée, plat principale is not evident
+ * i will summarize confisserie, dessert into the type sweet_dish
+ * i will summarize accompagnement, Amuse-guele and entrée
+ * finally i will only cetegorize into boisson, sweet_dish, rest, and leave out sauce
+ * @param {*} session
+ * @param {*} limitNumber
+ */
+const getGoodRecetteRandom = async (session, limitNumber = 5) => {
+  // get all recettes Ids in the current session which are seen
+  let sessionCopy = [];
+  recettesIds = [];
+  for (let index = 0; index < session.listOfRecRecettes.length; index++) {
+    const recette = session.listOfRecRecettes[index].recette;
+    recettesIds.push(recette._id);
+    if (session.listOfRecRecettes[index].status !== "SEEN") {
+      sessionCopy.push(session.listOfRecRecettes[index]);
+    }
+  }
+  //console.log("session Copy before populating:\n", sessionCopy);
+  // populate the recette in the mongoose model
+  for (let i = 0; i < sessionCopy.length; i++) {
+    try {
+      sessionCopy[i].recette = await recetteModel
+        .findById(sessionCopy[i].recette)
+        .select(
+          "_id, title , type , isVegetarian , isSweet" //only data which is reevant for the next recommendation
+        );
+    } catch (err) {
+      console.log(err);
+      throw new HttpError("Error In servor", 500);
+    }
+  }
+  //console.log("session Copy after populating:\n", sessionCopy);
+  //now we have the sessionCopy[] which holds the populated recepies which have been seen
+  let amountLiked = 0;
+  let amountSweetInLiked = 0;
+  let amountVegeInLiked = 0;
+  let amountSweet = 0;
+  let amountVege = 0;
+  let recepiesCookingTime = [];
+  for (let i = 0; i < sessionCopy.length; i++) {
+    if (sessionCopy[i].recette.isSweet) {
+      amountSweet++;
+    }
+    if (sessionCopy[i].recette.isVege) {
+      amountVege++;
+    }
+    if (sessionCopy[i].liked) {
+      amountLiked++;
+      /* if (!isNaN(sessionCopy[i].totalTime)) {
+        recepiesCookingTime.push(sessionCopy[i].totalTime);
+      } */
+    }
+    if (sessionCopy[i].liked && sessionCopy[i].recette.isSweet) {
+      amountSweetInLiked++;
+    }
+    if (sessionCopy[i].liked && sessionCopy[i].recette.isVege) {
+      amountVegeInLiked++;
+    }
+  }
+  //Time
+  /* recepiesCookingTime = recepiesCookingTime.filter(function (value) {
+    return value > 0;
+  });
+  let mean = algo.calculateMean(recepiesCookingTime);
+  let derivation = algo.calculateSD(recepiesCookingTime); */
+  //sweet
+  let amountDisliked = sessionCopy.length - amountLiked;
+  let probabilitySweet =
+    amountSweetInLiked / amountLiked -
+    (-1 * (amountSweet - amountSweetInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies
+  let preferesSweet = false;
+  let filterSweetness = false;
+  if (Math.abs(probabilitySweet) > 0.3) {
+    filterSweetness = true;
+  }
+  probabilitySweet > 0 ? (preferesSweet = true) : (preferesSweet = false);
+  //Vege
+  let probabilityVege =
+    amountVegeInLiked / amountLiked -
+    (-1 * (amountVege - amountVegeInLiked)) / amountDisliked; //if > 0 then user preferes sweet recepies
+  let preferesVege = false;
+  let filterVege = false;
+  if (Math.abs(probabilityVege) > 0.3) {
+    filterVege = true;
+  }
+  probabilityVege > 0 ? (preferesVege = true) : (preferesVege = false);
+  let recettes = [];
+  try {
+    recettes = await recetteModel
+      .find({
+        $and: [
+          {
+            _id: { $nin: recettesIds },
+            //$or: [{ filterSweetness, isSweet: { $eq: preferesSweet } }],
+            $cond: {
+              if: { filterSweetness },
+              then: { isSweet: { $eq: preferesSweet } },
+              else: {},
+            },
+            $cond: {
+              if: { filterVege },
+              then: { isVegetarian: { $eq: preferesVege } },
+              else: {},
+            },
+            /* $and: [
+              { totalTime: { $lte: mean + derivation } },
+              { totalTime: { $gte: mean - derivation } },
+            ], */
+          },
+        ],
+      })
+      .limit(limitNumber)
+      .select(
+        //"_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+        "_id, imagesUrls , isVegetarian , isSweet "
+      );
+  } catch (err) {
+    console.log(err);
+    throw new HttpError("Error In servor", 500);
+  }
+  if (recettes.length < limitNumber) {
+    try {
+      recettes = await recetteModel
+        .find({ _id: { $nin: recettesIds } })
+        .limit(limitNumber)
+        .skip(random)
+        .select(
+          "_id, title , type , difficulty , totalTime , isVegetarian , isVegan , isLactoseFree , isGlutenFree , imagesUrls , totalTime "
+        );
+    } catch (err) {
+      console.log(err);
+      throw new HttpError("Error In servor", 500);
+    }
+    //if there is no recette we have getAll
+    if (recettes.length === 0) {
+      try {
+        await endSessionswithFull(session);
+      } catch (err) {
+        console.log(err);
+        throw new HttpError("Error In servor", 500);
+      }
+    }
+  }
+  return recettes;
+  //return _getGoodRecetteRandom(session);
+  //here we load a custom filter which is a result from our model. The filter will be updated on every response from the client, so in the post request
 };
 /**
  * TODO
