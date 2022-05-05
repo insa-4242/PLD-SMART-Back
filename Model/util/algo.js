@@ -42,6 +42,7 @@ function sortByOcccurrence(array, lowerBound = 1) {
   //console.log("sortedArray: ", sortedArray);
   return sortedArray;
 }
+<<<<<<< HEAD
 /**
  * Works like function sortByOcccurrence but accepts as nput a nested array[array[],array[],...]
  * merges these arrays together and calls sortByOcccurrence on this array
@@ -60,3 +61,37 @@ function sortByOcccurrenceNested(array, lowerBound = 1) {
 }
 module.exports = { sortByOcccurrence };
 module.exports = { sortByOcccurrenceNested };
+=======
+// Calculate the average of all the numbers
+function calculateMean(values) {
+  const mean =
+    values.reduce((sum, current) => sum + current, 0) / values.length;
+  return mean;
+}
+
+// Calculate variance
+function calculateVariance(values) {
+  const average = calculateMean(values);
+  const squareDiffs = values.map((value) => {
+    const diff = value - average;
+    return diff * diff;
+  });
+  const variance = calculateMean(squareDiffs);
+  return variance;
+}
+
+// Calculate stand deviation
+function calculateSD(variance) {
+  return Math.sqrt(variance);
+}
+module.exports = {
+  sortByOcccurrence,
+  calculateMean,
+  calculateVariance,
+  calculateSD,
+};
+/* module.exports = { calculateMean };
+module.exports = { calculateVariance };
+module.exports = { calculateSD };
+ */
+>>>>>>> main

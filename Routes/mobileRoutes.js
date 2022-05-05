@@ -1,7 +1,9 @@
 const express = require("express");
 const routerMobile = express.Router();
 const mobileController = require("../Controller/mobileController");
-
+const userController = require("../Controller/userController");
+const recoController = require("../Controller/recommandationController");
+const checkAuth = require("../Middleware/Check-auth");
 const { check } = require("express-validator");
 const mongoose = require("mongoose");
 
@@ -306,31 +308,27 @@ routerMobile.get(
           }
         }
         if (filter.difficulty) {
-          if (filter.difficulty.min) {
-            try {
-              if (isNumerica(filter.difficulty.min)) {
+          try {
+            filter.difficulty.forEach((dif, index) => {
+              if (isNumerica(dif)) {
                 if (typeof filter.difficulty.min === "string") {
-                  filter.difficulty.min = parseInt(filter.difficulty.min);
+                  filter.difficulty[index] = parseInt(dif);
                 }
               } else {
-                throw new Error("difficulty minimum must be an int");
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
-            } catch (err) {
-              throw new Error("difficulty minimum must be an int");
-            }
-          }
-          if (filter.difficulty.max) {
-            try {
-              if (isNumerica(filter.difficulty.max)) {
-                if (typeof filter.difficulty.max === "string") {
-                  filter.difficulty.max = parseInt(filter.difficulty.max);
-                }
-              } else {
-                throw new Error("difficulty maximum must be an int");
+              if (dif < 1 || dif > 5) {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
-            } catch (err) {
-              throw new Error("difficulty maximum must be an int");
-            }
+            });
+          } catch (err) {
+            throw new Error(
+              "difficulty minimum must be an array of int between 0 and 1"
+            );
           }
         }
         req.query.correctFilter = filter;
@@ -410,31 +408,27 @@ routerMobile.get(
           }
         }
         if (filter.difficulty) {
-          if (filter.difficulty.min) {
-            try {
-              if (isNumerica(filter.difficulty.min)) {
+          try {
+            filter.difficulty.forEach((dif, index) => {
+              if (isNumerica(dif)) {
                 if (typeof filter.difficulty.min === "string") {
-                  filter.difficulty.min = parseInt(filter.difficulty.min);
+                  filter.difficulty[index] = parseInt(dif);
                 }
               } else {
-                throw new Error("difficulty minimum must be an int");
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
-            } catch (err) {
-              throw new Error("difficulty minimum must be an int");
-            }
-          }
-          if (filter.difficulty.max) {
-            try {
-              if (isNumerica(filter.difficulty.max)) {
-                if (typeof filter.difficulty.max === "string") {
-                  filter.difficulty.max = parseInt(filter.duration.max);
-                }
-              } else {
-                throw new Error("difficulty maximum must be an int");
+              if (dif < 1 || dif > 5) {
+                throw new Error(
+                  "difficulty minimum must be an int  between 0 and 1"
+                );
               }
-            } catch (err) {
-              throw new Error("difficulty maximum must be an int");
-            }
+            });
+          } catch (err) {
+            throw new Error(
+              "difficulty minimum must be an array of int between 0 and 1"
+            );
           }
         }
         if (filter.type) {
@@ -499,5 +493,46 @@ routerMobile.get(
   ],
   mobileController.searchByIngr
 );
+routerMobile.get("/recette/init", mobileController.initRecette);
 routerMobile.get("/recette/:id", mobileController.getRecettebyId);
+routerMobile.post(
+  "/user/signup",
+  [
+    check("userName").not().isEmpty(),
+
+    check("email").custom((val) => {
+      const re =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(val).toLowerCase());
+    }),
+    check("password").isLength({ min: 6 }),
+  ],
+  userController.signup
+);
+routerMobile.post(
+  "/user/login",
+  [
+    check("email").custom((val) => {
+      const re =
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return re.test(String(val).toLowerCase());
+    }),
+    check("password").isLength({ min: 6 }),
+  ],
+  userController.login
+);
+
+routerMobile.use(checkAuth);
+
+routerMobile.get(
+  "/recommandation",
+
+  recoController.getreco
+);
+routerMobile.post(
+  "/recommandation",
+  [check("type").isIn(["LIKE", "DISLIKE"]), check("recetteId").not().isEmpty()],
+  recoController.postreco
+);
+
 module.exports = routerMobile;
