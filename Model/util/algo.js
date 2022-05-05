@@ -42,6 +42,24 @@ function sortByOcccurrence(array, lowerBound = 1) {
   //console.log("sortedArray: ", sortedArray);
   return sortedArray;
 }
+/**
+ * Works like function sortByOcccurrence but accepts as nput a nested array[array[],array[],...]
+ * merges these arrays together and calls sortByOcccurrence on this array
+ * @param {*} array Array of Arrays with unique IDS, can have intersections
+ * @param {Number} lowerBound IDs which occure less then this lower bound will be dropped
+ * @returns {[String]} Set of IDs (IDs unique), ordered by occurrence rate in the input array, descending
+ */
+function sortByOcccurrenceNested(array, lowerBound = 1) {
+  //array = [[1,2,3],[1,2,3,4],[2,3,4,5]];
+  let concatArray = [];
+  for (let i = 0; i < array.length; i++) {
+    concatArray = concatArray.concat(array[i]);
+  }
+  //concatArray = [1,2,3,1,2,3,4,2,3,4,5];
+  return sortByOcccurrence(concatArray, lowerBound);
+}
+module.exports = { sortByOcccurrence };
+module.exports = { sortByOcccurrenceNested };
 // Calculate the average of all the numbers
 function calculateMean(values) {
   const mean =
